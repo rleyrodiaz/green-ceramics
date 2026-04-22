@@ -1,0 +1,239 @@
+/* ── Reset del theme de Streamlit ── */
+[data-testid="stAppViewContainer"] {
+    background-color: #FAFAF8;
+}
+
+[data-testid="stSidebar"] {
+    background-color: #F2F0EB;
+    border-right: 1px solid #E0DDD6;
+}
+
+[data-testid="stHeader"] {
+    background-color: transparent;
+}
+
+/* Ocultar elementos de Streamlit que no queremos */
+#MainMenu {
+    visibility: hidden;
+}
+
+footer {
+    visibility: hidden;
+}
+
+[data-testid="stToolbar"] {
+    display: none;
+}
+
+[data-testid="stDecoration"] {
+    display: none;
+}
+
+/* ── Tipografía ── */
+html,
+body,
+[class*="css"] {
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    color: #2C2C2A;
+}
+
+/* ── Botones principales ── */
+[data-testid="stButton"]>button {
+    background-color: #2C2C2A;
+    color: #FAFAF8;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1.4rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+[data-testid="stButton"]>button:hover {
+    background-color: #444441;
+    color: #FAFAF8;
+}
+
+/* ── Inputs ── */
+[data-testid="stTextInput"] input,
+[data-testid="stTextArea"] textarea,
+[data-testid="stSelectbox"] select {
+    border: 1px solid #D3D1C7;
+    border-radius: 6px;
+    background-color: #FFFFFF;
+    color: #2C2C2A;
+    font-size: 0.95rem;
+}
+
+[data-testid="stTextInput"] input:focus {
+    border-color: #888780;
+    box-shadow: none;
+}
+
+/* ── Cards de productos (clase custom) ── */
+.product-card {
+    background: #FFFFFF;
+    border: 1px solid #E0DDD6;
+    border-radius: 10px;
+    padding: 1rem;
+    transition: box-shadow 0.2s ease;
+}
+
+.product-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.product-card img {
+    width: 100%;
+    border-radius: 6px;
+    object-fit: cover;
+    aspect-ratio: 1/1;
+}
+
+.product-card .price {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2C2C2A;
+    margin-top: 0.5rem;
+}
+
+.product-card .title {
+    font-size: 0.95rem;
+    color: #444441;
+    margin-top: 0.25rem;
+}
+
+/* ── Navbar custom ── */
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid #E0DDD6;
+    background: #FAFAF8;
+    margin-bottom: 2rem;
+}
+
+.navbar .brand {
+    font-size: 1.3rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #2C2C2A;
+}
+
+.navbar .nav-links a {
+    margin-left: 1.5rem;
+    color: #5F5E5A;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.navbar .nav-links a:hover {
+    color: #2C2C2A;
+}
+
+
+
+
+
+
+
+
+
+
+/* ── Product card info ── */
+.product-card-info {
+    padding: 0.5rem 0;
+}
+
+.product-card-info .title {
+    font-size: 0.95rem;
+    color: #444441;
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.product-card-info .price {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2C2C2A;
+}
+
+.badge-featured {
+    display: inline-block;
+    background: #F2F0EB;
+    color: #5F5E5A;
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    margin-top: 0.25rem;
+}
+
+.badge-stock {
+    display: inline-block;
+    background: #FCEBEB;
+    color: #A32D2D;
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    margin-top: 0.25rem;
+}
+
+/* ── Filtros sidebar ── */
+.filter-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #888780;
+    margin: 1.2rem 0 0.4rem;
+}
+
+/* ── Detail page ── */
+.product-detail-title {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #2C2C2A;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+}
+
+.product-detail-price {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #2C2C2A;
+    margin: 0.5rem 0 1rem;
+}
+
+.product-detail-meta {
+    font-size: 0.9rem;
+    color: #5F5E5A;
+    margin-bottom: 0.3rem;
+}
+
+.product-detail-description {
+    font-size: 0.95rem;
+    color: #444441;
+    line-height: 1.7;
+    margin: 1rem 0;
+}
+
+.stock-ok {
+    color: #0F6E56;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.stock-low {
+    color: #BA7517;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.stock-out {
+    color: #A32D2D;
+    font-weight: 500;
+    font-size: 0.9rem;
+}

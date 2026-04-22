@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin — Green.</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+    <div class="cuenta-layout">
+        <div class="cuenta-auth">
+            <a href="/" class="logo" style="margin-bottom:2rem;display:block">
+                Green<span>.</span>
+            </a>
+            <p class="section-eyebrow">Panel de administración</p>
+            <h2 class="auth-title">Ingresá</h2>
+
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="email" placeholder="admin@ceramics.com" />
+            </div>
+            <div class="form-group">
+                <label>Contraseña</label>
+                <input type="password" id="password" placeholder="········" />
+            </div>
+            <div class="error-msg" id="error"></div>
+            <button class="btn-primary" style="width:100%" onclick="login()">
+                Ingresar
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Si ya hay token admin válido, redirigir
+        const token = localStorage.getItem("admin_token");
+        if (token) window.location = "/admin/dashboard";
+
+        async function login() {
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+            const errEl = document.getElementById("error");
+
+            if (!email || !password) {
+                errEl.textContent = "Completá email y contraseña.";
+                errEl.style.display = "block";
+                return;
+            }
+
+            try {
+                const res = await fetch("/api/auth/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                if (!res.ok) {
+                    errEl.textContent = "Credenciales incorrectas.";
+                    errEl.style.display = "block";
+                    return;
+                }
+
+                const data = await res.json();
+
+                if (data.rol !== "admin") {
+                    errEl.textContent = "No tenés permisos de administrador.";
+                    errEl.style.display = "block";
+                    return;
+                }
+
+                localStorage.setItem("admin_token", data.token);
+                localStorage.setItem("admin_user", JSON.stringify(data));
+                window.location = "/admin/dashboard";
+
+            } catch (e) {
+                errEl.textContent = "Error de conexión.";
+                errEl.style.display = "block";
+            }
+        }
+
+        document.addEventListener("keydown", e => {
+            if (e.key === "Enter") login();
+        });
+    </script>
+</body>
+
+</html>

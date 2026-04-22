@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Green. — Cerámica en Gres</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav>
+        <a href="/" class="logo">Green<span>.</span></a>
+        <ul>
+            <li><a href="/catalogo">Colección</a></li>
+            <li><a href="/#nosotros">Nosotros</a></li>
+            <li><a href="/#contacto">Contacto</a></li>
+            <li><a href="/carrito" class="nav-carrito">Carrito (<span id="cart-count">0</span>)</a></li>
+            <li><a href="/cuenta">Cuenta</a></li>
+        </ul>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-text">
+            <p class="hero-eyebrow">Cerámica artesanal · Gres</p>
+            <h1 class="hero-title">
+                Piezas hechas<br>
+                con las <em>manos</em><br>
+                y el tiempo
+            </h1>
+            <p class="hero-desc">
+                Cada pieza nace del torno, los rollos o el pellizco.
+                Sin moldes, sin series. Cerámica viva para la vida cotidiana.
+            </p>
+            <div class="hero-btns">
+                <a href="/catalogo" class="btn-primary">Ver colección</a>
+                <a href="/#nosotros" class="btn-outline">Nuestra historia</a>
+            </div>
+        </div>
+        <div class="hero-image">
+            <img src="https://picsum.photos/seed/ceramics-hero/800/1000" alt="Cerámica Green." />
+            <div class="hero-badge">Hecho a mano en Argentina</div>
+        </div>
+    </section>
+
+    <!-- PRODUCTOS DESTACADOS -->
+    <section class="productos-section" id="coleccion">
+        <p class="section-eyebrow">Colección actual</p>
+        <h2 class="section-title">Piezas destacadas</h2>
+        <p class="section-sub">
+            Una selección de lo que está disponible ahora mismo.
+        </p>
+        <div class="products-grid" id="products-grid">
+            <!-- cargado desde /api/productos?destacados=true -->
+        </div>
+        <div style="text-align:center; margin-top: 3rem;">
+            <a href="/catalogo" class="btn-outline">Ver colección completa</a>
+        </div>
+    </section>
+
+    <!-- NOSOTROS -->
+    <section class="about" id="nosotros">
+        <div class="about-text">
+            <p class="section-eyebrow">Nuestra historia</p>
+            <h2 class="section-title">El barro como<br>lenguaje</h2>
+            <p class="section-sub">
+                Green nació de la necesidad de hacer algo con las manos.
+                Empezamos con un torno, una hornalla y muchas ganas.
+                Hoy cada pieza sigue siendo tan impredecible y única
+                como la primera.
+            </p>
+            <p class="section-sub">
+                Trabajamos con gres, un material rugoso y resistente
+                que aguanta el horno, el frío y el uso diario.
+                Sin barnices tóxicos, sin plásticos.
+            </p>
+            <div class="about-stats">
+                <div>
+                    <div class="stat-num">+200 piezas realizadas</div>
+                    <!-- <div class="stat-label">piezas realizadas</div> -->
+                </div>
+                <div>
+                    <div class="stat-num">6 técnicas distintas</div>
+                    <!-- <div class="stat-label">técnicas distintas</div> -->
+                </div>
+                <div>
+                    <div class="stat-num">100% artesanal</div>
+                    <!-- <div class="stat-label">artesanal</div> -->
+                </div>
+                <!-- <div>
+                    <div class="stat-num">ARG</div>
+                    <div class="stat-label">hecho en Argentina</div>
+                </div> -->
+            </div>
+        </div>
+        <div class="about-image">
+            <img src="https://picsum.photos/seed/ceramics-about/700/900" alt="Taller Green." />
+        </div>
+    </section>
+
+    <!-- CONTACTO -->
+    <section class="contact" id="contacto">
+        <div class="contact-form">
+            <p class="section-eyebrow">Escribinos</p>
+            <h2 class="section-title">Consultas</h2>
+            <p class="section-sub">
+                ¿Preguntas sobre una pieza, encargos especiales
+                o simplemente querés saber más? Escribinos.
+            </p>
+            <div class="form-group">
+                <label>Tu nombre</label>
+                <input type="text" id="c-name" placeholder="María García" />
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="c-email" placeholder="maria@email.com" />
+            </div>
+            <div class="form-group">
+                <label>Mensaje</label>
+                <textarea id="c-msg" placeholder="Hola, me interesa..."></textarea>
+            </div>
+            <button class="btn-primary" onclick="enviarConsulta()">Enviar consulta</button>
+            <div class="success-msg" id="contact-success">
+                ¡Gracias! Te respondemos pronto.
+            </div>
+        </div>
+        <div class="contact-info">
+            <p class="section-eyebrow">Encontranos</p>
+            <h2 class="section-title" style="margin-bottom:2rem">Hablemos</h2>
+            <div class="contact-item">
+                <p class="contact-label">Instagram</p>
+                <p class="contact-value">@green.ceramica</p>
+            </div>
+            <div class="contact-item">
+                <p class="contact-label">Email</p>
+                <p class="contact-value">hola@greencera

@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "green-shop"
+version = "0.1.0"
+description = "E-commerce de piezas de Gres"
+authors = ["RLD"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+streamlit = "^1.43.0"
+psycopg2-binary = "^2.9"
+sqlalchemy = "^2.0"
+python-dotenv = "^1.0"
+bcrypt = "^4.1"
+cloudinary = "^1.40"
+mercadopago = "^2.3"
+pillow = "^10.0"
+fastapi = "^0.115"
+uvicorn = "^0.29" 
+python-jose = {extras = ["cryptography"], version = "^3.3"}
+resend = "^2.0"
+python-multipart = "^0.0.26"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.0"
+ruff = "^0.4"

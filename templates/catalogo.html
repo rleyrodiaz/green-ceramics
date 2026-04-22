@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Colección — Green.</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav>
+        <a href="/" class="logo">Green<span>.</span></a>
+        <ul>
+            <li><a href="/catalogo" style="color:var(--clay)">Colección</a></li>
+            <li><a href="/#nosotros">Nosotros</a></li>
+            <li><a href="/#contacto">Contacto</a></li>
+            <li><a href="/carrito" class="nav-carrito">Carrito (<span id="cart-count">0</span>)</a></li>
+            <li><a href="/cuenta">Cuenta</a></li>
+        </ul>
+    </nav>
+
+    <!-- HEADER -->
+    <div class="page-header">
+        <p class="section-eyebrow">Todo disponible</p>
+        <h1 class="page-title">Colección</h1>
+    </div>
+
+    <!-- CONTENIDO -->
+    <div class="catalogo-layout">
+
+        <!-- FILTROS -->
+        <aside class="filtros">
+            <div class="filtro-grupo">
+                <p class="filtro-titulo">Categoría</p>
+                <ul class="filtro-lista" id="filtro-categorias">
+                    <li class="filtro-item active" data-value="">Todas</li>
+                </ul>
+            </div>
+            <div class="filtro-grupo">
+                <p class="filtro-titulo">Técnica</p>
+                <ul class="filtro-lista">
+                    <li class="filtro-item active" data-tecnica="">Todas</li>
+                    <li class="filtro-item" data-tecnica="torno">Torno</li>
+                    <li class="filtro-item" data-tecnica="rollos">Rollos</li>
+                    <li class="filtro-item" data-tecnica="placas">Placas</li>
+                    <li class="filtro-item" data-tecnica="pellizco">Pellizco</li>
+                    <li class="filtro-item" data-tecnica="molde">Molde</li>
+                    <li class="filtro-item" data-tecnica="raku">Raku</li>
+                </ul>
+            </div>
+            <div class="filtro-grupo">
+                <p class="filtro-titulo">Disponibilidad</p>
+                <ul class="filtro-lista">
+                    <li class="filtro-item active" data-stock="">Todas</li>
+                    <li class="filtro-item" data-stock="disponible">Con stock</li>
+                    <li class="filtro-item" data-stock="ultimas">Últimas unidades</li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- GRID -->
+        <main class="catalogo-main">
+            <div class="catalogo-toolbar">
+                <p class="catalogo-count" id="catalogo-count">Cargando...</p>
+                <input type="text" class="catalogo-search" id="catalogo-search" placeholder="Buscar pieza..." />
+            </div>
+            <div class="products-grid" id="products-grid"></div>
+        </main>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <a href="/" class="logo">Green<span>.</span></a>
+        <p>© 2025 Green. Cerámica en Gres — Hecho con amor</p>
+        <p>Cada pieza es única e irrepetible</p>
+    </footer>
+
+    <script src="/static/main.js"></script>
+    <script src="/static/catalogo.js"></script>
+</body>
+
+</html>

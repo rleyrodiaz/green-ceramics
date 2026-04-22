@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Órdenes — Admin Green.</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="/static/style.css" />
+    <link rel="stylesheet" href="/static/admin.css" />
+</head>
+
+<body class="admin-body">
+
+    <aside class="admin-sidebar">
+        <a href="/"
+            style="display:block; margin-bottom:2.5rem; font-family:'Cormorant Garamond',serif; font-size:1.8rem; font-weight:300; letter-spacing:0.15em; color:var(--cream); text-decoration:none">
+            Green<span style="color:var(--clay)">.</span>
+        </a>
+        <div class="admin-nav">
+            <a href="/admin/dashboard" class="admin-nav-link">Dashboard</a>
+            <a href="/admin/productos" class="admin-nav-link">Productos</a>
+            <a href="/admin/ordenes" class="admin-nav-link">Órdenes</a>
+        </div>
+        <button class="admin-logout" onclick="logout()">Salir</button>
+    </aside>
+
+    <!-- <aside class="admin-sidebar">
+        <a href="/" class="logo" style="display:block; margin-bottom:2.5rem">Green<span>.</span></a>
+        <nav class="admin-nav">
+            <a href="/admin/dashboard" class="admin-nav-link"
+                style="color:rgba(245,240,232,0.5);display:block">Dashboard</a>
+            <a href="/admin/productos" class="admin-nav-link"
+                style="color:rgba(245,240,232,0.5);display:block">Productos</a>
+            <a href="/admin/ordenes" class="admin-nav-link active"
+                style="color:rgba(245,240,232,0.9);display:block">Órdenes</a>
+        </nav>
+        <button class="admin-logout" onclick="logout()">Salir</button>
+    </aside> -->
+
+    <main class="admin-main">
+        <div class="admin-header">
+            <h1 class="admin-title">Órdenes</h1>
+            <div class="admin-filtros-status">
+                <button class="filtro-status active" data-status="" onclick="filtrarOrdenes('', this)">
+                    Todas
+                </button>
+                <button class="filtro-status" data-status="pending" onclick="filtrarOrdenes('pending', this)">
+                    Pendientes
+                </button>
+                <button class="filtro-status" data-status="paid" onclick="filtrarOrdenes('paid', this)">
+                    Pagadas
+                </button>
+                <button class="filtro-status" data-status="preparing" onclick="filtrarOrdenes('preparing', this)">
+                    Preparando
+                </button>
+                <button class="filtro-status" data-status="shipped" onclick="filtrarOrdenes('shipped', this)">
+                    Enviadas
+                </button>
+            </div>
+        </div>
+
+        <div class="admin-tabla-wrapper">
+            <table class="admin-tabla" id="tabla-ordenes">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Cliente</th>
+                        <th>Ciudad</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-ordenes">
+                    <tr>
+                        <td colspan="8" style="text-align:center;color:var(--text-muted)">
+                            Cargando...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="/static/admin.js"></script>
+    <script>
+        verificarAdmin();
+        cargarOrdenes("");
+
+        async function cargarOrdenes(status) {
+            const url = status ? `/api/admin/ordenes?status=${status}` : "/api/admin/ordenes";
+            const ordenes = await apiAdmin(url);
+            if (!ordenes) return;
+
+            const tbody = document.getElementById("tbody-ordenes");
+
+            if (ordenes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8"
+                    style="text-align:center;color:var(--text-muted)">
+                    No hay órdenes.</td></tr>`;
+                return;
+            }
+
+            const statusLabel = {
+                pending: "Pendiente",
+                paid: "Pagada",
+                preparing: "Preparando",
+                shipped: "Enviada",
+                delivered: "Entregada",
+                cancelled: "Cancelada",
+            };
+
+            const nextStatus = {
+                pending: "paid",
+                paid: "preparing",
+                preparing: "shipped",
+                shipped: "delivered",
+            };
+
+            const nextLabel = {
+                pending: "Marcar pagada",
+                paid: "Preparando",
+                preparing: "Marcar enviada",
+                shipped: "Marcar entregada",
+            };
+
+            tbody.innerHTML = ordenes.map(o => {
+                const fecha = new Date(o.created_at).toLocaleDateString("es-AR");
+                const itemsText = o.items.map(i => `${i.product_name} ×${i.quantity}`).join(", ");
+                const next = nextStatus[o.status];
+
+                return `
+                    <tr>
+                        <td>#${o.id}</td>
+                        <td><strong>${o.nombre}</strong></td>
+                        <td>${o.ciudad || "—"}</td>
+                        <td style="font-size:0.82rem;color:var(--text-muted);max-width:200px">
+                            ${itemsText}
+                        </td>
+                        <td>$${o.total.toLocaleString("es-AR")}</td>
+                        <td>
+                            <span class="admin-badge badge-${o.status}">
+                                ${statusLabel[o.status] || o.status}
+                            </span>
+                        </td>
+                        <td style="font-size:0.82rem;color:var(--text-muted)">${fecha}</td>
+                        <td>
+                            ${next ? `
+                                <button class="admin-btn-sm"
+                                        onclick="avanzarEstado(${o.id}, '${next}')">
+                                    ${nextLabel[o.status]}
+                                </button>
+                            ` : "—"}
+                        </td>
+                    </tr>
+                `;
+            }).join("");
+        }
+
+        async function avanzarEstado(id, status) {
+            await apiAdmin(`/api/admin/ordenes/${id}/status`, "PUT", { status });
+            const statusActual = document.querySelector(".filtro-status.active").dataset.status;
+            cargarOrdenes(statusActual);
+        }
+
+        function filtrarOrdenes(status, el) {
+            document.querySelectorAll(".filtro-status").forEach(b => b.classList.remove("active"));
+            el.classList.add("active");
+            cargarOrdenes(status);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Productos — Admin Green.</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="/static/style.css" />
+    <link rel="stylesheet" href="/static/admin.css" />
+</head>
+
+<body class="admin-body">
+    <aside class="admin-sidebar">
+        <a href="/"
+            style="display:block; margin-bottom:2.5rem; font-family:'Cormorant Garamond',serif; font-size:1.8rem; font-weight:300; letter-spacing:0.15em; color:var(--cream); text-decoration:none">
+            Green<span style="color:var(--clay)">.</span>
+        </a>
+        <div class="admin-nav">
+            <a href="/admin/dashboard" class="admin-nav-link">Dashboard</a>
+            <a href="/admin/productos" class="admin-nav-link">Productos</a>
+            <a href="/admin/ordenes" class="admin-nav-link">Órdenes</a>
+        </div>
+        <button class="admin-logout" onclick="logout()">Salir</button>
+    </aside>
+
+
+    <!-- <aside class="admin-sidebar">
+        <a href="/" class="logo" style="display:block; margin-bottom:2.5rem">Green<span>.</span></a>
+        <nav class="admin-nav">
+            <a href="/admin/dashboard" class="admin-nav-link"
+                style="color:rgba(245,240,232,0.5);display:block">Dashboard</a>
+            <a href="/admin/productos" class="admin-nav-link active"
+                style="color:rgba(245,240,232,0.9);display:block">Productos</a>
+            <a href="/admin/ordenes" class="admin-nav-link"
+                style="color:rgba(245,240,232,0.5);display:block">Órdenes</a>
+        </nav>
+        <button class="admin-logout" onclick="logout()">Salir</button>
+    </aside> -->
+
+    <main class="admin-main">
+        <div class="admin-header">
+            <h1 class="admin-title">Productos</h1>
+            <button class="btn-primary" onclick="abrirNuevoProducto()">
+                + Nuevo producto
+            </button>
+        </div>
+
+        <div class="admin-tabla-wrapper">
+            <table class="admin-tabla" id="tabla-productos">
+                <thead>
+                    <tr>
+                        <th>Imagen</th>
+                        <th>Nombre</th>
+                        <th>Categoría</th>
+                        <th>Precio</th>
+                        <th>Stock</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-productos">
+                    <tr>
+                        <td colspan="7" style="text-align:center;color:var(--text-muted)">
+                            Cargando...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- MODAL VER PRODUCTO -->
+    <div class="modal-overlay" id="modal-ver-producto">
+        <div class="modal" style="max-width:680px">
+            <button class="modal-close" onclick="cerrarModal('modal-ver-producto')">×</button>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem">
+                <div>
+                    <img id="ver-imagen" src="" alt=""
+                        style="width:100%;aspect-ratio:3/4;object-fit:cover;filter:sepia(10%)" />
+                </div>
+                <div style="display:flex;flex-direction:column;gap:0.75rem;padding-top:0.5rem">
+                    <p class="section-eyebrow" id="ver-categoria"></p>
+                    <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;
+                                font-weight:300;color:var(--earth)" id="ver-nombre"></h3>
+                    <p style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;
+                            color:var(--earth)" id="ver-precio"></p>
+                    <div id="ver-stock"></div>
+                    <p style="font-size:0.85rem;color:var(--text-muted);line-height:1.7" id="ver-descripcion"></p>
+                    <div id="ver-meta" style="font-size:0.82rem;color:var(--text-muted);
+                                display:flex;flex-direction:column;gap:0.3rem"></div>
+                    <div style="margin-top:auto;padding-top:1rem;
+                                border-top:1px solid rgba(196,135,90,0.15)">
+                        <a id="ver-link-publico" href="" target="_blank" class="admin-btn-sm">Ver en tienda ↗</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL NUEVO PRODUCTO -->
+    <div class="modal-overlay" id="modal-producto">
+        <div class="modal" style="max-width:620px">
+            <button class="modal-close" onclick="cerrarModal('modal-producto')">×</button>
+            <p class="section-eyebrow">Catálogo</p>
+            <h3 class="modal-title">Nuevo producto</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nombre *</label>
+                    <input type="text" id="p-nombre" placeholder="Mug torno negro" />
+                </div>
+                <div class="form-group">
+                    <label>Precio *</label>
+                    <input type="number" id="p-precio" placeholder="4500" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <textarea id="p-desc" placeholder="Describí la pieza..."></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Categoría</label>
+                    <select id="p-categoria"></select>
+                </div>
+                <div class="form-group">
+                    <label>Técnica</label>
+                    <select id="p-tecnica">
+                        <option value="">Sin especificar</option>
+                        <option value="torno">Torno</option>
+                        <option value="rollos">Rollos</option>
+                        <option value="placas">Placas</option>
+                        <option value="pellizco">Pellizco</option>
+                        <option value="molde">Molde</option>
+                        <option value="raku">Raku</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Stock</label>
+                    <input type="number" id="p-stock" placeholder="0" value="0" />
+                </div>
+                <div class="form-group">
+                    <label>Dimensiones</label>
+                    <input type="text" id="p-dimensiones" placeholder="12×8 cm" />
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Peso (gramos)</label>
+                    <input type="number" id="p-peso" placeholder="320" />
+                </div>
+                <div class="form-group" style="display:flex;align-items:center;gap:0.5rem;padding-top:1.5rem">
+                    <input type="checkbox" id="p-destacado" style="width:auto" />
+                    <label for="p-destacado" style="text-transform:none;letter-spacing:0;font-size:0.9rem">
+                        Producto destacado
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Imágenes</label>
+                <input type="file" id="p-imagenes" multiple accept="image/*"
+                    style="padding:0.5rem 0; color:var(--text)" />
+                <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.3rem">
+                    La primera imagen será la principal. Formatos: JPG, PNG, WEBP.
+                </p>
+            </div>
+
+            <div class="error-msg" id="producto-error"></div>
+            <div class="success-msg" id="producto-success">
+                ¡Producto creado correctamente!
+            </div>
+
+            <button class="btn-primary" style="width:100%" onclick="crearProducto()">
+                Guardar producto
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR PRODUCTO -->
+    <div class="modal-overlay" id="modal-editar-producto">
+        <div class="modal" style="max-width:620px">
+            <button class="modal-close" onclick="cerrarModal('modal-editar-producto')">×</button>
+            <p class="section-eyebrow">Editar</p>
+            <h3 class="modal-title" id="editar-titulo"></h3>
+            <input type="hidden" id="editar-id" />
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nombre *</label>
+                    <input type="text" id="editar-nombre" />
+                </div>
+                <div class="form-group">
+                    <label>Precio *</label>
+                    <input type="number" id="editar-precio" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <textarea id="editar-desc"></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Categoría</label>
+                    <select id="editar-categoria"></select>
+                </div>
+                <div class="form-group">
+                    <label>Técnica</label>
+                    <select id="editar-tecnica">
+                        <option value="">Sin especificar</option>
+                        <option value="torno">Torno</option>
+                        <option value="rollos">Rollos</option>
+                        <option value="placas">Placas</option>
+                        <option value="pellizco">Pellizco</option>
+                        <option value="molde">Molde</option>
+                        <option value="raku">Raku</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Stock</label>
+                    <input type="number" id="editar-stock" min="0" />
+                </div>
+                <div class="form-group">
+                    <label>Dimensiones</label>
+                    <input type="text" id="editar-dimensiones" placeholder="12×8 cm" />
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Peso (gramos)</label>
+                    <input type="number" id="editar-peso" />
+                </div>
+                <div class="form-group" style="display:flex;align-items:center;
+                                            gap:0.5rem;padding-top:1.5rem">
+                    <input type="checkbox" id="editar-destacado" style="width:auto" />
+                    <label for="editar-destacado" style="text-transform:none;letter-spacing:0;font-size:0.9rem">
+                        Producto destacado
+                    </label>
+                </div>
+            </div>
+
+            <div class="error-msg" id="editar-error"></div>
+            <div class="success-msg" id="editar-success">
+                ¡Producto actualizado correctamente!
+            </div>
+
+            <div style="display:flex;gap:1rem;margin-top:1rem">
+                <button class="btn-primary" style="flex:1" onclick="guardarEdicion()">
+                    Guardar cambios
+                </button>
+                <button class="btn-outline" onclick="cerrarModal('modal-editar-producto')">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/admin.js"></script>
+    <script>
+        verificarAdmin();
+        cargarCategoriaSelect();
+        cargarTablaProductos();
+
+        async function cargarTablaProductos() {
+            const productos = await apiAdmin("/api/admin/productos");
+            if (!productos) return;
+            // productosCache = productos;
+            window.productosCache = productos;
+
+            const tbody = document.getElementById("tbody-productos");
+
+            if (productos.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;
+                    color:var(--text-muted)">No hay productos cargados.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = productos.map(p => `
+                <tr>
+                    <td>
+                        <img src="${p.imagen || `https://picsum.photos/seed/${p.slug}/60/80`}"
+                             style="width:50px;height:65px;object-fit:cover;filter:sepia(10%)" />
+                    </td>
+                    <td>
+                        <strong>${p.nombre}</strong><br>
+                        <span style="font-size:0.78rem;color:var(--text-muted)">${p.slug}</span>
+                    </td>
+                    <td>${p.categoria || "—"}</td>
+                    <td>$${p.precio.toLocaleString("es-AR")}</td>
+                    <td>
+                        <input type="number" value="${p.stock}" min="0"
+                               style="width:60px;border:none;border-bottom:1px solid var(--sand);
+                                      background:transparent;font-family:Jost;font-size:0.9rem"
+                               onchange="actualizarStock(${p.id}, this.value)" />
+                    </td>
+                    <td>
+                        <span class="admin-badge ${p.activo ? 'badge-active' : 'badge-inactive'}">
+                            ${p.activo ? "Activo" : "Inactivo"}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="admin-btn-sm admin-btn-editar" data-slug="${p.slug}">
+                            Editar
+                        </button>
+                        <button class="admin-btn-sm" onclick="toggleActivo(${p.id}, ${p.activo})">
+                            ${p.activo ? "Desactivar" : "Activar"}
+                        </button>
+                        <button class="admin-btn-sm admin-btn-ver" data-slug="${p.slug}">
+                            Ver
+                        </button>                    
+                    </td>
+                </tr>
+            `).join("");
+        }
+
+        async function crearProducto() {
+            const errEl = document.getElementById("producto-error");
+            const nombre = document.getElementById("p-nombre").value.trim();
+            const precio = document.getElementById("p-precio").value;
+
+            if (!nombre || !precio) {
+                errEl.textContent = "Nombre y precio son obligatorios.";
+                errEl.style.display = "block";
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("nombre", nombre);
+            formData.append("precio", precio);
+            formData.append("descripcion", document.getElementById("p-desc").value);
+            formData.append("stock", document.getElementById("p-stock").value);
+            formData.append("categoria_id", document.getElementById("p-categoria").value);
+            formData.append("tecnica", document.getElementById("p-tecnica").value);
+            formData.append("dimensiones", document.getElementById("p-dimensiones").value);
+            formData.append("peso_gramos", document.getElementById("p-peso").value);
+            formData.append("destacado", document.getElementById("p-destacado").checked);
+
+            const archivos = document.getElementById("p-imagenes").files;
+            for (const file of archivos) {
+                formData.append("imagenes", file);
+            }
+
+            const token = localStorage.getItem("admin_token");
+            const res = await fetch("/api/admin/productos", {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${token}` },
+                body: formData,
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                errEl.textContent = err.detail || "Error al crear el producto.";
+                errEl.style.display = "block";
+                return;
+            }
+
+            document.getElementById("producto-success").style.display = "block";
+            errEl.style.display = "none";
+            setTimeout(() => {
+                cerrarModal("modal-producto");
+                cargarTablaProductos();
+            }, 1500);
+        }
+
+        async function toggleActivo(id, activo) {
+            await apiAdmin(`/api/admin/productos/${id}`, "PUT", { activo: !activo });
+            cargarTablaProductos();
+        }
+
+        async function actualizarStock(id, stock) {
+            await apiAdmin(`/api/admin/productos/${id}`, "PUT", { stock: parseInt(stock) });
+        }
+
+        function abrirNuevoProducto() {
+            document.getElementById("producto-error").style.display = "none";
+            document.getElementById("producto-success").style.display = "none";
+            document.getElementById("modal-producto").classList.add("active");
+            document.body.style.overflow = "hidden";
+
+
+        }
+
+        // document.getElementById("modal-editar-producto").addEventListener("click", e => {
+        //     if (e.target === document.getElementById("modal-editar-producto"))
+        //         cerrarModal("modal-editar-producto");
+        // });
+
+
+        document.addEventListener("click", e => {
+            // Cerrar modales
+            if (e.target.id === "modal-editar-producto")
+                cerrarModal("modal-editar-producto");
+            if (e.target.id === "modal-ver-producto")
+                cerrarModal("modal-ver-producto");
+
+            // Botones dinámicos
+            const btnEditar = e.target.closest(".admin-btn-editar");
+            const btnVer = e.target.closest(".admin-btn-ver");
+            if (btnEditar) editarProducto(btnEditar.dataset.slug);
+            if (btnVer) verProducto(btnVer.dataset.slug);
+        });
+
+
+    </script>
+
+
+
+
+
+</body>
+
+</html>

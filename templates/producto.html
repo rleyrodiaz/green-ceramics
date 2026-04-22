@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Producto — Green.</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav>
+        <a href="/" class="logo">Green<span>.</span></a>
+        <ul>
+            <li><a href="/catalogo">Colección</a></li>
+            <li><a href="/#nosotros">Nosotros</a></li>
+            <li><a href="/#contacto">Contacto</a></li>
+            <li><a href="/carrito" class="nav-carrito">Carrito (<span id="cart-count">0</span>)</a></li>
+            <li><a href="/cuenta">Cuenta</a></li>
+        </ul>
+    </nav>
+
+    <!-- CONTENIDO -->
+    <div class="producto-layout">
+
+        <!-- GALERÍA -->
+        <div class="producto-galeria">
+            <div class="galeria-main">
+                <img id="galeria-img-principal" src="" alt="" />
+            </div>
+            <div class="galeria-thumbs" id="galeria-thumbs"></div>
+        </div>
+
+        <!-- INFO -->
+        <div class="producto-info">
+            <a href="/catalogo" class="producto-back">← Volver a la colección</a>
+
+            <p class="producto-categoria" id="producto-categoria"></p>
+            <h1 class="producto-nombre" id="producto-nombre"></h1>
+            <p class="producto-precio" id="producto-precio"></p>
+
+            <div class="producto-stock" id="producto-stock"></div>
+
+            <p class="producto-descripcion" id="producto-descripcion"></p>
+
+            <div class="producto-meta" id="producto-meta"></div>
+
+            <div class="producto-acciones" id="producto-acciones">
+                <div class="cantidad-selector">
+                    <button onclick="cambiarCantidad(-1)">−</button>
+                    <span id="cantidad">1</span>
+                    <button onclick="cambiarCantidad(1)">+</button>
+                </div>
+                <button class="btn-primary" id="btn-agregar" onclick="agregarAlCarrito()">
+                    Agregar al carrito
+                </button>
+            </div>
+
+            <div class="producto-envio">
+                <p>✦ Embalaje especial para cerámica</p>
+                <p>✦ Envíos a todo el país</p>
+                <p>✦ Cada pieza es única e irrepetible</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <a href="/" class="logo">Green<span>.</span></a>
+        <p>© 2025 Green. Cerámica en Gres — Hecho con amor</p>
+        <p>Cada pieza es única e irrepetible</p>
+    </footer>
+
+    <script src="/static/main.js"></script>
+    <script src="/static/producto.js"></script>
+</body>
+
+</html>

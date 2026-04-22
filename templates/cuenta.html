@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mi cuenta — Green.</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav>
+        <a href="/" class="logo">Green<span>.</span></a>
+        <ul>
+            <li><a href="/catalogo">Colección</a></li>
+            <li><a href="/#nosotros">Nosotros</a></li>
+            <li><a href="/#contacto">Contacto</a></li>
+            <li><a href="/carrito" class="nav-carrito">Carrito (<span id="cart-count">0</span>)</a></li>
+            <li><a href="/cuenta" style="color:var(--clay)">Cuenta</a></li>
+        </ul>
+    </nav>
+
+    <!-- CONTENIDO -->
+    <div class="cuenta-layout">
+
+        <!-- PANEL LOGIN / REGISTRO -->
+        <div class="cuenta-auth" id="cuenta-auth">
+            <!-- Tabs -->
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Ingresar</button>
+                <button class="auth-tab" id="tab-registro" onclick="switchTab('registro')">Crear cuenta</button>
+            </div>
+
+            <!-- LOGIN -->
+            <div class="auth-form" id="form-login">
+                <p class="section-eyebrow">Bienvenida de vuelta</p>
+                <h2 class="auth-title">Ingresá a<br>tu cuenta</h2>
+
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="login-email" placeholder="maria@email.com" />
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="login-password" placeholder="········" />
+                </div>
+                <div class="error-msg" id="login-error"></div>
+                <button class="btn-primary" style="width:100%" onclick="hacerLogin()">Ingresar</button>
+            </div>
+
+            <!-- REGISTRO -->
+            <div class="auth-form" id="form-registro" style="display:none">
+                <p class="section-eyebrow">Primera vez por acá</p>
+                <h2 class="auth-title">Creá tu<br>cuenta</h2>
+
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" id="reg-name" placeholder="María García" />
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="reg-email" placeholder="maria@email.com" />
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="reg-password" placeholder="Mínimo 8 caracteres" />
+                </div>
+                <div class="form-group">
+                    <label>Repetir contraseña</label>
+                    <input type="password" id="reg-password2" placeholder="········" />
+                </div>
+                <div class="error-msg" id="registro-error"></div>
+                <button class="btn-primary" style="width:100%" onclick="hacerRegistro()">Crear cuenta</button>
+            </div>
+        </div>
+
+        <!-- PANEL USUARIO LOGUEADO -->
+        <div class="cuenta-panel" id="cuenta-panel" style="display:none">
+
+            <div class="cuenta-header">
+                <div>
+                    <p class="section-eyebrow">Bienvenida</p>
+                    <h2 class="auth-title" id="panel-nombre"></h2>
+                </div>
+                <button class="btn-outline" onclick="hacerLogout()">Salir</button>
+            </div>
+
+            <!-- Tabs panel -->
+            <div class="panel-tabs">
+                <button class="panel-tab active" onclick="switchPanelTab('pedidos', this)">
+                    Mis pedidos
+                </button>
+                <button class="panel-tab" onclick="switchPanelTab('datos', this)">
+                    Mis datos
+                </button>
+            </div>
+
+            <!-- PEDIDOS -->
+            <div id="panel-pedidos">
+                <div id="pedidos-lista"></div>
+            </div>
+
+            <!-- DATOS -->
+            <div id="panel-datos" style="display:none">
+                <div class="datos-grid">
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" id="datos-name" />
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="datos-email" disabled style="opacity:0.5; cursor:not-allowed" />
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="guardarDatos()">
+                    Guardar cambios
+                </button>
+                <div class="success-msg" id="datos-success">
+                    Datos actualizados correctamente.
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <a href="/" class="logo">Green<span>.</span></a>
+        <p>© 2025 Green. Cerámica en Gres — Hecho con amor</p>
+        <p>Cada pieza es única e irrepetible</p>
+    </footer>
+
+    <script src="/static/main.js"></script>
+    <script src="/static/cuenta.js"></script>
+</body>
+
+</html>

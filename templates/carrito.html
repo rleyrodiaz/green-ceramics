@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Carrito — Green.</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav>
+        <a href="/" class="logo">Green<span>.</span></a>
+        <ul>
+            <li><a href="/catalogo">Colección</a></li>
+            <li><a href="/#nosotros">Nosotros</a></li>
+            <li><a href="/#contacto">Contacto</a></li>
+            <li><a href="/carrito" style="color:var(--clay)">Carrito (<span id="cart-count">0</span>)</a></li>
+            <li><a href="/cuenta">Cuenta</a></li>
+        </ul>
+    </nav>
+
+    <!-- CONTENIDO -->
+    <div class="page-header">
+        <p class="section-eyebrow">Tu selección</p>
+        <h1 class="page-title">Carrito</h1>
+    </div>
+
+    <div class="carrito-layout" id="carrito-layout">
+        <!-- cargado por JS -->
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <a href="/" class="logo">Green<span>.</span></a>
+        <p>© 2025 Green. Cerámica en Gres — Hecho con amor</p>
+        <p>Cada pieza es única e irrepetible</p>
+    </footer>
+
+    <!-- MODAL CHECKOUT -->
+    <div class="modal-overlay" id="modal-overlay"
+        style="position:fixed;inset:0;background:rgba(44,31,20,0.75);z-index:9999;display:none;align-items:center;justify-content:center;padding:2rem">
+
+        <div
+            style="background:#faf8f4;padding:2.5rem;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;position:relative;border-radius:2px;">
+            <button class="modal-close" onclick="cerrarModal()">×</button>
+            <p class="section-eyebrow">Último paso</p>
+            <h3 class="modal-title">Datos de envío</h3>
+
+            <div class="form-group">
+                <label>Nombre completo</label>
+                <input type="text" id="sh-name" placeholder="María García" />
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="sh-email" placeholder="maria@email.com" />
+            </div>
+            <div class="form-group">
+                <label>Teléfono</label>
+                <input type="tel" id="sh-phone" placeholder="+54 11 1234-5678" />
+            </div>
+            <div class="form-group">
+                <label>Dirección</label>
+                <input type="text" id="sh-address" placeholder="Av. Corrientes 1234, Piso 2" />
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Ciudad</label>
+                    <input type="text" id="sh-city" placeholder="Buenos Aires" />
+                </div>
+                <div class="form-group">
+                    <label>Provincia</label>
+                    <input type="text" id="sh-province" placeholder="CABA" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Código postal</label>
+                <input type="text" id="sh-zip" placeholder="1043" />
+            </div>
+            <div class="form-group">
+                <label>Notas (opcional)</label>
+                <textarea id="sh-notes" placeholder="Instrucciones especiales..."></textarea>
+            </div>
+
+            <div class="modal-resumen" id="modal-resumen"></div>
+
+            <button class="btn-primary" style="width:100%" onclick="confirmarPedido()">
+                Confirmar y pagar
+            </button>
+
+            <div class="success-msg" id="checkout-success">
+                ¡Pedido recibido! Te enviamos un email de confirmación.
+            </div>
+            <div class="error-msg" id="checkout-error"></div>
+        </div>
+    </div>
+
+    <script src="/static/main.js"></script>
+    <script src="/static/carrito.js"></script>
+</body>
+
+</html>
