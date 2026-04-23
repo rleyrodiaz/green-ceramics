@@ -37,8 +37,13 @@ from decimal import Decimal
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Crear tablas si no existen
+    from db.connection import Base, engine
+    import db.models  # noqa
+    Base.metadata.create_all(bind=engine)
     test_connection()
-    yield
+    print("✅ DB lista")
+    yield    
 
 app = FastAPI(lifespan=lifespan)
 
