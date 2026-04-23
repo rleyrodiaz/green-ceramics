@@ -34,17 +34,43 @@ from fastapi.responses import HTMLResponse
 from contextlib import asynccontextmanager
 from db.connection import test_connection
 from decimal import Decimal
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Crear tablas si no existen
-    from db.connection import Base, engine
+    from db.connection import Base, engine, get_db
     import db.models  # noqa
     Base.metadata.create_all(bind=engine)
+    
+    # Seed inicial si no hay datos
+    from db.models import Category, User
+    with get_db() as db:
+        if db.query(Category).count() == 0:
+            cats = [
+                Category(name="Tazas y mugs",  slug="tazas-mugs",   position=1),
+                Category(name="Bowls",          slug="bowls",         position=2),
+                Category(name="Jarrones",       slug="jarrones",      position=3),
+                Category(name="Platos",         slug="platos",        position=4),
+                Category(name="Macetas",        slug="macetas",       position=5),
+                Category(name="Piezas únicas",  slug="piezas-unicas", position=6),
+            ]
+            db.add_all(cats)
+            print("✅ Categorías creadas")
+
+        if db.query(User).count() == 0:
+            from services.auth import hash_password
+            from db.models import UserRole
+            admin = User(
+                name="Admin",
+                email="admin@ceramics.com",
+                password=hash_password("admin1234"),
+                role=UserRole.admin,
+            )
+            db.add(admin)
+            print("✅ Admin creado")
+
     test_connection()
     print("✅ DB lista")
-    yield    
-
+    yield
+    
 app = FastAPI(lifespan=lifespan)
 
 # Archivos estáticos (CSS, JS, imágenes)
