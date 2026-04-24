@@ -18,7 +18,8 @@ function renderCarrito() {
     }
 
     const subtotal = items.reduce((sum, i) => sum + i.precio * i.quantity, 0);
-    const envio = subtotal >= 50000 ? 0 : 3500;
+    // const envio = subtotal >= 50000 ? 0 : 3500;
+    const envio = 0;
     const total = subtotal + envio;
     const fmtPrecio = n => `$${n.toLocaleString("es-AR")}`;
 
@@ -114,7 +115,8 @@ function abrirCheckout() {
     const cart = getCart();
     const items = Object.values(cart);
     const subtotal = items.reduce((sum, i) => sum + i.precio * i.quantity, 0);
-    const envio = subtotal >= 50000 ? 0 : 3500;
+    // const envio = subtotal >= 50000 ? 0 : 3500;
+    const envio = 0;
     const total = subtotal + envio;
     const fmt = n => `$${n.toLocaleString("es-AR")}`;
 

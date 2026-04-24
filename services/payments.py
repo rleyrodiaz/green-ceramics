@@ -23,10 +23,15 @@ def crear_preferencia(order: Order, items: list) -> dict:
             for item in items
         ],
         "back_urls": {
-            "success": "http://localhost:8000/pago/exitoso",
-            "failure": "http://localhost:8000/pago/fallido",
-            "pending": "http://localhost:8000/pago/pendiente",
+            "success": "https://green-ceramics.onrender.com/pago/exitoso",
+            "failure": "https://green-ceramics.onrender.com/pago/fallido",
+            "pending": "https://green-ceramics.onrender.com/pago/pendiente",
         },
+        # "back_urls": {
+        #     "success": "http://localhost:8000/pago/exitoso",
+        #     "failure": "http://localhost:8000/pago/fallido",
+        #     "pending": "http://localhost:8000/pago/pendiente",
+        # },
         # "auto_return": "approved",
         "external_reference": str(order.id),
         "statement_descriptor": "Green Ceramica",

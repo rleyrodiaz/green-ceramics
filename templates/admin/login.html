@@ -37,8 +37,24 @@
 
     <script>
         // Si ya hay token admin válido, redirigir
+        // const token = localStorage.getItem("admin_token");
+        // if (token) window.location = "/admin/dashboard";
+
         const token = localStorage.getItem("admin_token");
-        if (token) window.location = "/admin/dashboard";
+        if (token) {
+            fetch("/api/admin/stats", {
+                headers: { "Authorization": `Bearer ${token}` }
+            }).then(res => {
+                if (res.ok) window.location = "/admin/dashboard";
+                else {
+                    localStorage.removeItem("admin_token");
+                    localStorage.removeItem("admin_user");
+                }
+            }).catch(() => {
+                localStorage.removeItem("admin_token");
+                localStorage.removeItem("admin_user");
+            });
+        }
 
         async function login() {
             const email = document.getElementById("email").value.trim();
