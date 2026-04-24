@@ -701,6 +701,29 @@ section {
     letter-spacing: 0.05em;
 }
 
+/* ── CUENTA ── */
+.cuenta-layout {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8rem 2rem 4rem;
+    background: var(--cream);
+}
+
+.cuenta-auth {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 440px;
+}
+
+.cuenta-panel {
+    width: 100%;
+    max-width: 680px;
+}
+
+
 /* ══════════════════════════════════════════
    RESPONSIVE
    ══════════════════════════════════════════ */
@@ -1041,4 +1064,137 @@ section {
     align-items: center;
     justify-content: center;
     width: 100%;
+}
+
+/* ── PANEL CUENTA ── */
+.cuenta-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(196, 135, 90, 0.15);
+}
+
+.panel-tabs {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid rgba(196, 135, 90, 0.12);
+}
+
+.panel-tab {
+    background: none;
+    border: none;
+    font-family: "Jost", sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 0.5rem 0;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s;
+}
+
+.panel-tab.active {
+    color: var(--earth);
+    border-bottom-color: var(--clay);
+}
+
+.pedido-card {
+    border: 1px solid rgba(196, 135, 90, 0.15);
+    padding: 1rem 1.2rem;
+    margin-bottom: 0.75rem;
+    background: var(--white);
+}
+
+.pedido-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(196, 135, 90, 0.1);
+}
+
+.pedido-num {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 1.1rem;
+    color: var(--earth);
+}
+
+.pedido-fecha {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+}
+
+.pedido-status {
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--clay);
+}
+
+.pedido-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    padding: 0.3rem 0;
+}
+
+.pedido-total {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--earth);
+    text-align: right;
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(196, 135, 90, 0.1);
+}
+
+.datos-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.auth-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid rgba(196, 135, 90, 0.2);
+}
+
+.auth-tab {
+    background: none;
+    border: none;
+    font-family: "Jost", sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 0.75rem 1.5rem 0.75rem 0;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s;
+}
+
+.auth-tab.active {
+    color: var(--earth);
+    border-bottom-color: var(--clay);
+}
+
+.auth-title {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 2.5rem;
+    font-weight: 300;
+    color: var(--earth);
+    line-height: 1.1;
+    margin-bottom: 2rem;
 }
