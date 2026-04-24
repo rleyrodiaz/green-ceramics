@@ -231,7 +231,7 @@ async def crear_orden(data: OrdenRequest):
     with get_db() as db:
         from db.models import Order, OrderItem, OrderStatus, Product
         subtotal = sum(i.precio * i.cantidad for i in data.items)
-        envio    = 0 if subtotal >= 50000 else 3500
+        envio    = 0 ### if subtotal >= 50000 else 3500
         total    = subtotal + envio
 
         orden = Order(
