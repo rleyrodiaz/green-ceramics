@@ -34,6 +34,8 @@ from fastapi.responses import HTMLResponse
 from contextlib import asynccontextmanager
 from db.connection import test_connection
 from decimal import Decimal
+import os
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     from db.connection import Base, engine, get_db
@@ -79,18 +81,23 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # Templates HTML
 templates = Jinja2Templates(directory="templates")
 
-
 # ── Páginas ────────────────────────────────────────────────────────
+
+IS_PRODUCTION = os.getenv("APP_ENV") == "production"
 
 @app.get("/", response_class=HTMLResponse)
 async def landing(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
-
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "is_production": IS_PRODUCTION,
+    })
 
 @app.get("/catalogo", response_class=HTMLResponse)
 async def catalogo(request: Request):
-    return templates.TemplateResponse("catalogo.html", {"request": request})
-
+    return templates.TemplateResponse("catalogo.html", {
+        "request": request,
+        "is_production": IS_PRODUCTION,
+    })
 
 @app.get("/producto/{slug}", response_class=HTMLResponse)
 async def producto(request: Request, slug: str):
@@ -101,17 +108,23 @@ async def producto(request: Request, slug: str):
     return templates.TemplateResponse("producto.html", {
         "request": request,
         "product": product,
+        "is_production": IS_PRODUCTION,
     })
 
 
 @app.get("/carrito", response_class=HTMLResponse)
 async def carrito(request: Request):
-    return templates.TemplateResponse("carrito.html", {"request": request})
-
+    return templates.TemplateResponse("carrito.html", {
+        "request": request,
+        "is_production": IS_PRODUCTION,
+    })
 
 @app.get("/cuenta", response_class=HTMLResponse)
 async def cuenta(request: Request):
-    return templates.TemplateResponse("cuenta.html", {"request": request})
+    return templates.TemplateResponse("cuenta.html", {
+        "request": request,
+        "is_production": IS_PRODUCTION,
+    })
 
 
 # ── API de datos ────────────────────────────────────────────────────

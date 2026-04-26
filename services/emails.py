@@ -49,6 +49,10 @@ def enviar_confirmacion_pedido(
     <!DOCTYPE html>
     <html lang="es">
     <head>
+        {% if is_production %}
+        <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+        {% endif %}
+      
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
