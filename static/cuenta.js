@@ -55,15 +55,11 @@ async function hacerLogin() {
         const user = await res.json();
         saveSession(user);
 
-        // Si es admin, guardar token y redirigir al dashboard
         if (user.rol === "admin") {
             localStorage.setItem("admin_token", user.token);
             localStorage.setItem("admin_user", JSON.stringify(user));
-            window.location = "/admin/dashboard";
-            return;
         }
 
-        // Si es cliente, mostrar panel normal
         mostrarPanel(user);
 
     } catch (e) {
@@ -117,9 +113,12 @@ async function hacerRegistro() {
 // ── Logout ────────────────────────────────────────────────────────
 function hacerLogout() {
     clearSession();
+    localStorage.removeItem("admin_token");
+    localStorage.removeItem("admin_user");
     document.getElementById("cuenta-auth").style.display = "flex";
     document.getElementById("cuenta-panel").style.display = "none";
     updateCartCount();
+    updateNavAdmin();
 }
 
 // ── Panel usuario ─────────────────────────────────────────────────
@@ -130,6 +129,7 @@ function mostrarPanel(user) {
     document.getElementById("datos-name").value = user.nombre;
     document.getElementById("datos-email").value = user.email;
     cargarPedidos(user.id);
+    updateNavAdmin();
 }
 
 // ── Pedidos ───────────────────────────────────────────────────────
@@ -197,7 +197,6 @@ async function cargarPedidos(userId) {
 
 // ── Guardar datos ─────────────────────────────────────────────────
 function guardarDatos() {
-    // TODO: endpoint PUT /api/usuarios/:id
     document.getElementById("datos-success").style.display = "block";
     setTimeout(() => {
         document.getElementById("datos-success").style.display = "none";
@@ -216,3 +215,4 @@ if (session) {
     mostrarPanel(session);
 }
 updateCartCount();
+updateNavAdmin();

@@ -508,15 +508,19 @@ async def api_admin_productos(admin=Depends(verificar_admin)):
     products = get_products(only_active=False)
     return [
         {
-            "id":        p.id,
-            "nombre":    p.name,
-            "slug":      p.slug,
-            "precio":    float(p.price),
-            "stock":     p.stock,
-            "activo":    p.is_active,
-            "destacado": p.is_featured,
-            "categoria": p.category.name if p.category else None,
-            "imagen":    _primary_image(p),
+            "id":          p.id,
+            "nombre":      p.name,
+            "descripcion": p.description,
+            "slug":        p.slug,
+            "precio":      float(p.price),
+            "stock":       p.stock,
+            "activo":      p.is_active,
+            "destacado":   p.is_featured,
+            "categoria":   p.category.name if p.category else None,
+            "imagen":      _primary_image(p),
+            "tecnica":     p.technique,
+            "dimensiones": p.dimensions,
+            "peso": p.weight_grams,
         }
         for p in products
     ]
@@ -561,20 +565,51 @@ async def api_crear_producto(
     )
     return {"ok": True, "id": product.id, "slug": product.slug}
 
-
 @app.put("/api/admin/productos/{product_id}")
 async def api_actualizar_producto(
     product_id: int,
     body: dict,
     admin=Depends(verificar_admin)
 ):
+
     from services.products import update_product, toggle_product_active
-    if "activo" in body:
-        toggle_product_active(product_id)
-    campos = {k: v for k, v in body.items() if k != "activo"}
-    if campos:
-        update_product(product_id, **campos)
+    from db.connection import get_db
+    from db.models import Product
+
+    print(f"📝 Actualizando producto {product_id} con: {body}")
+
+    with get_db() as db:
+        product = db.query(Product).filter(Product.id == product_id).first()
+        if not product:
+            raise HTTPException(status_code=404, detail="Producto no encontrado.")
+
+        if "activo" in body:
+            product.is_active = body["activo"]
+        if "name" in body:
+            product.name = body["name"]
+        if "price" in body:
+            from decimal import Decimal
+            product.price = Decimal(str(body["price"]))
+        if "description" in body:
+            product.description = body["description"]
+        if "stock" in body:
+            product.stock = int(body["stock"])
+        if "dimensions" in body:
+            product.dimensions = body["dimensions"]
+        if "weight_grams" in body:
+            product.weight_grams = body["weight_grams"]
+        if "is_featured" in body:
+            product.is_featured = body["is_featured"]
+        if "technique" in body:
+            from db.models import TechniqueType
+            product.technique = TechniqueType(body["technique"]) if body["technique"] else None
+        if "category_id" in body and body["category_id"]:
+            product.category_id = int(body["category_id"])
+
     return {"ok": True}
+
+
+
 
 # ── Páginas de retorno MercadoPago ─────────────────────────────────
 

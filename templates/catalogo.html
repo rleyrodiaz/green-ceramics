@@ -4,6 +4,8 @@
 <head>
     {% if is_production %}
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    {% else %}
+    <link rel="icon" href="data:,">
     {% endif %}
 
     <meta charset="UTF-8" />
@@ -28,6 +30,9 @@
             <li><a href="/#contacto">Contacto</a></li>
             <li><a href="/carrito" class="nav-carrito">Carrito (<span id="cart-count">0</span>)</a></li>
             <li><a href="/cuenta">Cuenta</a></li>
+            <li>
+                <a href="/admin/dashboard" id="nav-admin-link" style="display:none;color:var(--clay)">Admin ↗</a>
+            </li>
         </ul>
     </nav>
 

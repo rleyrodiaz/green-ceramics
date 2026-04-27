@@ -167,6 +167,7 @@ async function guardarEdicion() {
         weight_grams: parseInt(document.getElementById("editar-peso").value) || null,
         is_featured: document.getElementById("editar-destacado").checked,
         technique: document.getElementById("editar-tecnica").value || null,
+        category_id: document.getElementById("editar-categoria").value || null,
     };
 
     const result = await apiAdmin(`/api/admin/productos/${id}`, "PUT", body);
@@ -185,4 +186,3 @@ async function guardarEdicion() {
         cargarTablaProductos();
     }, 1500);
 }
-

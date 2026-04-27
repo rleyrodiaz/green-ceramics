@@ -26,6 +26,18 @@ function updateCartCount() {
     if (el) el.textContent = count;
 }
 
+function updateNavAdmin() {
+    const session = JSON.parse(localStorage.getItem("session") || "null");
+    const adminLink = document.getElementById("nav-admin-link");
+    if (adminLink) {
+        if (session && session.rol === "admin") {
+            adminLink.style.display = "inline";
+        } else {
+            adminLink.style.display = "none";
+        }
+    }
+}
+
 // ── Toast ─────────────────────────────────────────────────────────
 function showToast(msg) {
     const toast = document.createElement("div");
@@ -111,4 +123,5 @@ function enviarConsulta() {
 document.addEventListener("DOMContentLoaded", () => {
     updateCartCount();
     cargarDestacados();
+    updateNavAdmin();
 });

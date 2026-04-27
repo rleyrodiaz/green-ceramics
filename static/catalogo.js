@@ -6,6 +6,7 @@ let filtros = {
     stock: "",
     buscar: "",
 };
+let categoriasCache = [];
 
 // ── Cargar productos ──────────────────────────────────────────────
 async function cargarProductos() {
@@ -25,7 +26,21 @@ async function cargarCategorias() {
     try {
         const res = await fetch("/api/categorias");
         const cats = await res.json();
+        categoriasCache = cats;
         const lista = document.getElementById("filtro-categorias");
+
+        // Agregar listener al "Todas" que ya existe en el HTML
+        const todasEl = lista.querySelector('[data-value=""]');
+        if (todasEl) {
+            todasEl.addEventListener("click", () => {
+                document.querySelectorAll("#filtro-categorias .filtro-item")
+                    .forEach(i => i.classList.remove("active"));
+                todasEl.classList.add("active");
+                filtros.categoria = "";
+                renderProductos();
+            });
+        }
+
         cats.forEach(cat => {
             const li = document.createElement("li");
             li.className = "filtro-item";
@@ -47,10 +62,13 @@ function setFiltroCategoria(valor, el) {
     el.classList.add("active");
     renderProductos();
 }
-
 function aplicarFiltros(productos) {
     return productos.filter(p => {
-        if (filtros.categoria && p.categoria_slug !== filtros.categoria) return false;
+        if (filtros.categoria) {
+            // buscar por slug en las categorías cargadas
+            const cat = categoriasCache.find(c => c.slug === filtros.categoria);
+            if (cat && p.categoria !== cat.nombre) return false;
+        }
         if (filtros.tecnica && p.tecnica !== filtros.tecnica) return false;
         if (filtros.buscar && !p.nombre.toLowerCase().includes(filtros.buscar.toLowerCase())) return false;
         if (filtros.stock === "disponible" && p.stock === 0) return false;

@@ -4,7 +4,10 @@
 <head>
   {% if is_production %}
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+  {% else %}
+  <link rel="icon" href="data:,">
   {% endif %}
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Green. — Cerámica en Gres</title>
@@ -686,6 +689,9 @@
       <li><a href="#nosotras">Nosotras</a></li>
       <li><a href="#coleccion">Colección</a></li>
       <li><a href="#contacto">Contacto</a></li>
+      <li>
+        <a href="/admin/dashboard" id="nav-admin-link" style="display:none;color:var(--clay)">Admin ↗</a>
+      </li>
     </ul>
   </nav>
 
