@@ -120,6 +120,7 @@ async function editarProducto(slug) {
     console.log("modal existe:", document.getElementById("modal-editar-producto"));
     console.log("editar-nombre existe:", document.getElementById("editar-nombre"));
 
+    document.getElementById("editar-imagenes").value = "";
     const resCats = await fetch("/api/categorias");
     const cats = await resCats.json();
     const selectCat = document.getElementById("editar-categoria");
@@ -176,6 +177,23 @@ async function guardarEdicion() {
         errEl.textContent = "Error al guardar los cambios.";
         errEl.style.display = "block";
         return;
+    }
+    // Subir imágenes si se seleccionaron
+    const archivos = document.getElementById("editar-imagenes")?.files;
+    console.log("archivos:", archivos);
+    console.log("cantidad:", archivos?.length);
+    const token = localStorage.getItem("admin_token");
+    console.log("token:", token ? "existe" : "no existe");
+    if (archivos && archivos.length > 0) {
+        const formData = new FormData();
+        for (const file of archivos) {
+            formData.append("imagenes", file);
+        }
+        await fetch(`/api/admin/productos/${id}/imagenes`, {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${token}` },
+            body: formData,
+        });
     }
 
     document.getElementById("editar-success").style.display = "block";

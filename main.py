@@ -565,6 +565,51 @@ async def api_crear_producto(
     )
     return {"ok": True, "id": product.id, "slug": product.slug}
 
+@app.post("/api/admin/productos/{product_id}/imagenes")
+async def api_actualizar_imagenes(
+    product_id: int,
+    request: Request,
+    admin=Depends(verificar_admin)
+):
+    print(f"📸 Actualizando imágenes del producto {product_id}")
+    from services.images import delete_product_images, add_image_to_product
+    from services.storage import upload_image
+    from db.connection import get_db
+    from db.models import Product
+
+    form = await request.form()
+    image_files = []
+    for key, val in form.multi_items():
+        if key == "imagenes" and hasattr(val, "read"):
+            content = await val.read()
+            if content:
+                image_files.append((content, val.filename))
+
+    if not image_files:
+        raise HTTPException(status_code=400, detail="No se enviaron imágenes.")
+
+    with get_db() as db:
+        product = db.query(Product).filter(Product.id == product_id).first()
+        if not product:
+            raise HTTPException(status_code=404, detail="Producto no encontrado.")
+        slug = product.slug
+
+    # Borrar imágenes anteriores
+    delete_product_images(product_id)
+
+    # Subir nuevas
+    for position, (file_bytes, filename) in enumerate(image_files):
+        result = upload_image(file_bytes, slug, position)
+        add_image_to_product(
+            product_id=product_id,
+            url=result["url"],
+            public_id=result["public_id"],
+            position=position,
+            alt_text=slug,
+        )
+
+    return {"ok": True, "imagenes": len(image_files)}
+
 @app.put("/api/admin/productos/{product_id}")
 async def api_actualizar_producto(
     product_id: int,

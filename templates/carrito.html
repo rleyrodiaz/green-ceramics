@@ -17,6 +17,7 @@
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
         rel="stylesheet" />
     <link rel="stylesheet" href="/static/style.css" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 
 <body>
@@ -59,7 +60,10 @@
 
         <div
             style="background:#faf8f4;padding:2.5rem;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;position:relative;border-radius:2px;">
-            <button class="modal-close" onclick="cerrarModal()">×</button>
+            <button class="modal-close" onclick="cerrarModal()" title="Cerrar">
+                <i data-lucide="x-circle" style="width:22px;height:22px"></i>
+            </button>
+            <!-- <button class="modal-close" onclick="cerrarModal()" title="Cerrar">&#x2715;</button> -->
             <p class="section-eyebrow">Último paso</p>
             <h3 class="modal-title">Datos de envío</h3>
 
@@ -113,6 +117,7 @@
 
     <script src="/static/main.js"></script>
     <script src="/static/carrito.js"></script>
+    <script>lucide.createIcons();</script>
 </body>
 
 </html>

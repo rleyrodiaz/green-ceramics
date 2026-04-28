@@ -1198,3 +1198,22 @@ section {
     line-height: 1.1;
     margin-bottom: 2rem;
 }
+
+.modal-close {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: none;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-family: "Jost", sans-serif;
+    transition: color 0.2s;
+}
+
+.modal-close:hover {
+    color: var(--earth);
+}
