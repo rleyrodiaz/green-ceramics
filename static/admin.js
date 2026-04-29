@@ -69,7 +69,6 @@ function cerrarModal(id) {
 
 
 // ── Ver producto (modal) ───────────────────────────────────────────
-// let productosCache = [];
 window.productosCache = [];
 
 function verProducto(slug) {
@@ -145,6 +144,29 @@ async function editarProducto(slug) {
     // document.getElementById("modal-editar-producto").classList.add("active");
     document.getElementById("modal-editar-producto").style.display = "flex";
     document.body.style.overflow = "hidden";
+}
+
+// ── Borrar producto ───────────────────────────────────────────────
+async function borrarProducto(id, nombre) {
+    if (!confirm(`¿Seguro que querés borrar "${nombre}"? Esta acción no se puede deshacer.`)) return;
+
+    const token = localStorage.getItem("admin_token");
+    try {
+        const res = await fetch(`/api/admin/productos/${id}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${token}` },
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            alert(err.detail || "No se pudo borrar el producto.");
+            return;
+        }
+
+        cargarTablaProductos();
+    } catch (e) {
+        alert("Error de conexión.");
+    }
 }
 
 async function guardarEdicion() {

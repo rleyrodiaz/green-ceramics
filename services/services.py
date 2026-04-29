@@ -22,7 +22,9 @@ def verificar_token(token: str) -> dict | None:
     except JWTError:
         return None
 
-
 def es_admin_token(token: str) -> bool:
     payload = verificar_token(token)
-    return payload is not None and payload.get("rol") == "admin"
+    if not payload:
+        return False
+    rol = payload.get("rol")
+    return rol in ("admin", "owner")

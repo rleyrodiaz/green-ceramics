@@ -14,6 +14,7 @@ from db.connection import Base
 class UserRole(str, enum.Enum):
     customer = "customer"
     admin    = "admin"
+    owner    = "owner"
 
 
 class OrderStatus(str, enum.Enum):

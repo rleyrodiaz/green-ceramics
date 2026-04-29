@@ -452,3 +452,28 @@
     position: relative !important;
     border-radius: 2px !important;
 }
+
+.admin-btn-icon {
+    background: none;
+    border: 1px solid rgba(44, 31, 20, 0.15);
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    width: 32px;
+    height: 32px;
+}
+
+.admin-btn-icon:hover {
+    background: var(--earth);
+    color: var(--cream);
+    border-color: var(--earth);
+}
+
+.admin-btn-icon svg {
+    width: 14px;
+    height: 14px;
+}

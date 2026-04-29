@@ -90,7 +90,7 @@
 
                 const data = await res.json();
 
-                if (data.rol !== "admin") {
+                if (data.rol !== "admin" && data.rol !== "owner") {
                     errEl.textContent = "No tenés permisos de administrador.";
                     errEl.style.display = "block";
                     return;

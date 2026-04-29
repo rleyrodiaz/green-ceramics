@@ -3,7 +3,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Enums
-CREATE TYPE user_role      AS ENUM ('customer', 'admin');
+CREATE TYPE user_role      AS ENUM ('customer', 'admin', 'owner');
 CREATE TYPE order_status   AS ENUM ('pending','paid','preparing','shipped','delivered','cancelled');
 CREATE TYPE technique_type AS ENUM ('torno','rollos','placas','pellizco','molde','raku','otro');
 

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Usuarios — Admin Green.</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="/static/style.css" />
+    <link rel="stylesheet" href="/static/admin.css" />
+</head>
+
+<body class="admin-body">
+
+    <aside class="admin-sidebar">
+        <a href="/" style="display:block;margin-bottom:2.5rem;font-family:'Cormorant Garamond',serif;
+                           font-size:1.8rem;font-weight:300;letter-spacing:0.15em;
+                           color:var(--cream);text-decoration:none">
+            Green<span style="color:var(--clay)">.</span>
+        </a>
+        <div class="admin-nav">
+            <a href="/admin/dashboard" class="admin-nav-link">Dashboard</a>
+            <a href="/admin/productos" class="admin-nav-link">Productos</a>
+            <a href="/admin/ordenes" class="admin-nav-link">Órdenes</a>
+            <a href="/admin/usuarios" class="admin-nav-link active">Usuarios</a>
+            <a href="/admin/settings" class="admin-nav-link">Settings</a>
+        </div>
+        <button class="admin-logout" onclick="logout()">Salir</button>
+    </aside>
+
+    <main class="admin-main">
+        <div class="admin-header">
+            <h1 class="admin-title">Usuarios</h1>
+            <p class="admin-subtitle" id="usuarios-count"></p>
+        </div>
+
+        <div class="admin-tabla-wrapper">
+            <table class="admin-tabla">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th>Desde</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-usuarios">
+                    <tr>
+                        <td colspan="7" style="text-align:center;color:var(--text-muted)">
+                            Cargando...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="/static/admin.js"></script>
+    <script>
+        verificarAdmin();
+        cargarUsuarios();
+
+        async function cargarUsuarios() {
+            const usuarios = await apiAdmin("/api/admin/usuarios");
+            if (!usuarios) return;
+
+            document.getElementById("usuarios-count").textContent =
+                `${usuarios.length} usuarios registrados`;
+
+            const tbody = document.getElementById("tbody-usuarios");
+
+            if (usuarios.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7"
+                    style="text-align:center;color:var(--text-muted)">
+                    No hay usuarios.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = usuarios.map(u => {
+                const fecha = new Date(u.created_at).toLocaleDateString("es-AR");
+                return `
+                    <tr>
+                        <td>#${u.id}</td>
+                        <td><strong>${u.nombre}</strong></td>
+                        <td style="color:var(--text-muted)">${u.email}</td>
+                        <td>
+                            <select class="rol-select" data-id="${u.id}"
+                                    style="border:none;border-bottom:1px solid var(--sand);
+                                           background:transparent;font-family:Jost;
+                                           font-size:0.85rem;color:var(--text);
+                                           padding:0.2rem 0;cursor:pointer"
+                                    onchange="cambiarRol(${u.id}, this.value)">
+                                <option value="customer" ${u.rol === 'customer' ? 'selected' : ''}>Customer</option>
+                                <option value="admin"    ${u.rol === 'admin' ? 'selected' : ''}>Admin</option>
+                                <option value="owner"    ${u.rol === 'owner' ? 'selected' : ''}>Owner</option>
+                            </select>
+                        </td>
+                        <td>
+                            <span class="admin-badge ${u.activo ? 'badge-active' : 'badge-inactive'}">
+                                ${u.activo ? "Activo" : "Inactivo"}
+                            </span>
+                        </td>
+                        <td style="font-size:0.82rem;color:var(--text-muted)">${fecha}</td>
+                        <td>
+                            <button class="admin-btn-sm"
+                                    onclick="toggleActivoUsuario(${u.id}, ${u.activo})">
+                                ${u.activo ? "Desactivar" : "Activar"}
+                            </button>
+                            <button class="admin-btn-sm"
+                                    onclick="borrarUsuario(${u.id}, '${u.nombre}')">
+                                Borrar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join("");
+        }
+
+        async function cambiarRol(id, rol) {
+            await apiAdmin(`/api/admin/usuarios/${id}`, "PUT", { rol });
+        }
+
+        async function toggleActivoUsuario(id, activo) {
+            await apiAdmin(`/api/admin/usuarios/${id}`, "PUT", { activo: !activo });
+            cargarUsuarios();
+        }
+
+        async function borrarUsuario(id, nombre) {
+            if (!confirm(`¿Seguro que querés borrar a "${nombre}"?`)) return;
+            const token = localStorage.getItem("admin_token");
+            const res = await fetch(`/api/admin/usuarios/${id}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` },
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                alert(err.detail || "No se pudo borrar el usuario.");
+                return;
+            }
+            cargarUsuarios();
+        }
+    </script>
+</body>
+
+</html>

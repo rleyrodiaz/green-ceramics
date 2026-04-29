@@ -327,9 +327,16 @@ async def crear_orden(data: OrdenRequest):
 
 # ── Helper ──────────────────────────────────────────────────────────
 
+# def _primary_image(product) -> str:
+#     from services.products import get_primary_image_url
+#     return get_primary_image_url(product, fallback="")
+
 def _primary_image(product) -> str:
     from services.products import get_primary_image_url
-    return get_primary_image_url(product, fallback="")
+    url = get_primary_image_url(product, fallback="")
+    print(f"🖼️ imagen de {product.slug}: '{url}' | imágenes: {len(product.images)}")
+    return url
+
 
 
 class LoginRequest(BaseModel):
@@ -435,6 +442,71 @@ async def admin_productos(request: Request):
 async def admin_ordenes(request: Request):
     return templates.TemplateResponse("admin/ordenes.html", {"request": request})
 
+@app.get("/admin/usuarios", response_class=HTMLResponse)
+async def admin_usuarios(request: Request):
+    return templates.TemplateResponse("admin/usuarios.html", {"request": request})
+
+# ── API usuarios ───────────────────────────────────────────────────
+
+@app.get("/api/admin/usuarios")
+async def api_get_usuarios(admin=Depends(verificar_admin)):
+    from db.connection import get_db
+    from db.models import User
+    with get_db() as db:
+        users = db.query(User).order_by(User.created_at.desc()).all()
+        return [
+            {
+                "id":         u.id,
+                "nombre":     u.name,
+                "email":      u.email,
+                "rol":        u.role.value,
+                "activo":     u.is_active,
+                "created_at": u.created_at.isoformat(),
+            }
+            for u in users
+        ]
+
+
+@app.put("/api/admin/usuarios/{user_id}")
+async def api_actualizar_usuario(
+    user_id: int,
+    body: dict,
+    admin=Depends(verificar_admin)
+):
+    from db.connection import get_db
+    from db.models import User, UserRole
+    with get_db() as db:
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+        if "rol" in body:
+            user.role = UserRole(body["rol"])
+        if "activo" in body:
+            user.is_active = body["activo"]
+        if "nombre" in body:
+            user.name = body["nombre"]
+    return {"ok": True}
+
+
+@app.delete("/api/admin/usuarios/{user_id}")
+async def api_borrar_usuario(
+    user_id: int,
+    admin=Depends(verificar_admin)
+):
+    from db.connection import get_db
+    from db.models import User, Order
+    with get_db() as db:
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+        tiene_ordenes = db.query(Order).filter(Order.user_id == user_id).first()
+        if tiene_ordenes:
+            raise HTTPException(
+                status_code=400,
+                detail=f"No se puede borrar '{user.name}' porque tiene pedidos asociados."
+            )
+        db.delete(user)
+    return {"ok": True}
 
 # ── API admin ──────────────────────────────────────────────────────
 
@@ -653,7 +725,38 @@ async def api_actualizar_producto(
 
     return {"ok": True}
 
+@app.delete("/api/admin/productos/{product_id}")
+async def api_borrar_producto(
+    product_id: int,
+    admin=Depends(verificar_admin)
+):
+    from db.connection import get_db
+    from db.models import Product, OrderItem
+    from services.images import delete_product_images
 
+    with get_db() as db:
+        product = db.query(Product).filter(Product.id == product_id).first()
+        if not product:
+            raise HTTPException(status_code=404, detail="Producto no encontrado.")
+
+        # Verificar si tiene pedidos
+        tiene_pedidos = db.query(OrderItem).filter(
+            OrderItem.product_id == product_id
+        ).first()
+
+        if tiene_pedidos:
+            raise HTTPException(
+                status_code=400,
+                detail=f"No se puede borrar '{product.name}' porque tiene pedidos asociados."
+            )
+
+        # Borrar imágenes del storage
+        delete_product_images(product_id)
+
+        # Borrar producto
+        db.delete(product)
+
+    return {"ok": True}
 
 
 # ── Páginas de retorno MercadoPago ─────────────────────────────────

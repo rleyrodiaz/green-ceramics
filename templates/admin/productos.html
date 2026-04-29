@@ -18,6 +18,7 @@
         rel="stylesheet" />
     <link rel="stylesheet" href="/static/style.css" />
     <link rel="stylesheet" href="/static/admin.css" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 
 <body class="admin-body">
@@ -30,6 +31,8 @@
             <a href="/admin/dashboard" class="admin-nav-link">Dashboard</a>
             <a href="/admin/productos" class="admin-nav-link">Productos</a>
             <a href="/admin/ordenes" class="admin-nav-link">Órdenes</a>
+            <a href="/admin/usuarios" class="admin-nav-link">Usuarios</a>
+            <a href="/admin/settings" class="admin-nav-link">Settings</a>
         </div>
         <button class="admin-logout" onclick="logout()">Salir</button>
     </aside>
@@ -163,12 +166,12 @@
                     <input type="number" id="p-peso" placeholder="320" />
                 </div>
                 <div class="form-group">
-                    <label>Cambiar imágenes (opcional)</label>
+                    <label>Imágenes</label>
                     <!-- <input type="file" id="editar-imagenes" multiple accept="image/*" -->
                     <input type="file" id="p-imagenes" multiple accept="image/*"
                         style="padding:0.5rem 0; color:var(--text)" />
                     <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.3rem">
-                        Si subís nuevas imágenes reemplazarán las actuales.
+                        La primera imagen será la principal. Formatos: JPG, PNG, WEBP.
                     </p>
                 </div>
                 <div class="form-group" style="display:flex;align-items:center;gap:0.5rem;padding-top:1.5rem">
@@ -178,14 +181,14 @@
                     </label>
                 </div>
             </div>
-            <div class="form-group">
+            <!-- <div class="form-group">
                 <label>Imágenes</label>
                 <input type="file" id="p-imagenes" multiple accept="image/*"
                     style="padding:0.5rem 0; color:var(--text)" />
                 <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.3rem">
                     La primera imagen será la principal. Formatos: JPG, PNG, WEBP.
                 </p>
-            </div>
+            </div> -->
 
             <div class="error-msg" id="producto-error"></div>
             <div class="success-msg" id="producto-success">
@@ -261,7 +264,7 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>Cambiar imágenes (opcional)</label>
+                    <label>Cambiar Imágenes (opcional)</label>
                     <input type="file" id="editar-imagenes" multiple accept="image/*"
                         style="padding:0.5rem 0; color:var(--text)" />
                     <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.3rem">
@@ -295,9 +298,7 @@
         async function cargarTablaProductos() {
             const productos = await apiAdmin("/api/admin/productos");
             if (!productos) return;
-            // productosCache = productos;
             window.productosCache = productos;
-
             const tbody = document.getElementById("tbody-productos");
 
             if (productos.length === 0) {
@@ -310,7 +311,7 @@
                 <tr>
                     <td>
                         <img src="${p.imagen || `https://picsum.photos/seed/${p.slug}/60/80`}"
-                             style="width:50px;height:65px;object-fit:cover;filter:sepia(10%)" />
+                            style="width:50px;height:65px;object-fit:cover;filter:sepia(10%)" />
                     </td>
                     <td>
                         <strong>${p.nombre}</strong><br>
@@ -320,28 +321,35 @@
                     <td>$${p.precio.toLocaleString("es-AR")}</td>
                     <td>
                         <input type="number" value="${p.stock}" min="0"
-                               style="width:60px;border:none;border-bottom:1px solid var(--sand);
-                                      background:transparent;font-family:Jost;font-size:0.9rem"
-                               onchange="actualizarStock(${p.id}, this.value)" />
+                            style="width:60px;border:none;border-bottom:1px solid var(--sand);
+                                    background:transparent;font-family:Jost;font-size:0.9rem"
+                            onchange="actualizarStock(${p.id}, this.value)" />
                     </td>
                     <td>
                         <span class="admin-badge ${p.activo ? 'badge-active' : 'badge-inactive'}">
                             ${p.activo ? "Activo" : "Inactivo"}
                         </span>
                     </td>
-                    <td>
-                        <button class="admin-btn-sm admin-btn-editar" data-slug="${p.slug}">
-                            Editar
+                    <td style="display:flex;gap:0.5rem;align-items:center">
+                        <button class="admin-btn-icon admin-btn-editar" data-slug="${p.slug}" title="Editar">
+                            <i data-lucide="pencil"></i>
                         </button>
-                        <button class="admin-btn-sm" onclick="toggleActivo(${p.id}, ${p.activo})">
-                            ${p.activo ? "Desactivar" : "Activar"}
+                        <button class="admin-btn-icon admin-btn-ver" data-slug="${p.slug}" title="Ver">
+                            <i data-lucide="eye"></i>
                         </button>
-                        <button class="admin-btn-sm admin-btn-ver" data-slug="${p.slug}">
-                            Ver
-                        </button>                    
+                        <button class="admin-btn-icon" onclick="toggleActivo(${p.id}, ${p.activo})"
+                                title="${p.activo ? 'Desactivar' : 'Activar'}">
+                            <i data-lucide="${p.activo ? 'toggle-right' : 'toggle-left'}"></i>
+                        </button>
+                        <button class="admin-btn-icon admin-btn-borrar" data-id="${p.id}"
+                                data-nombre="${p.nombre}" title="Borrar">
+                            <i data-lucide="trash-2"></i>
+                        </button>
                     </td>
                 </tr>
             `).join("");
+
+            setTimeout(() => lucide.createIcons(), 0);
         }
 
         async function crearProducto() {
@@ -403,12 +411,21 @@
         }
 
         function abrirNuevoProducto() {
+            // Limpiar todos los campos
+            document.getElementById("p-nombre").value = "";
+            document.getElementById("p-precio").value = "";
+            document.getElementById("p-desc").value = "";
+            document.getElementById("p-stock").value = "0";
+            document.getElementById("p-categoria").selectedIndex = 0;
+            document.getElementById("p-tecnica").selectedIndex = 0;
+            document.getElementById("p-dimensiones").value = "";
+            document.getElementById("p-peso").value = "";
+            document.getElementById("p-destacado").checked = false;
+            document.getElementById("p-imagenes").value = "";
             document.getElementById("producto-error").style.display = "none";
             document.getElementById("producto-success").style.display = "none";
             document.getElementById("modal-producto").classList.add("active");
             document.body.style.overflow = "hidden";
-
-
         }
 
         // document.getElementById("modal-editar-producto").addEventListener("click", e => {
@@ -427,11 +444,13 @@
             // Botones dinámicos
             const btnEditar = e.target.closest(".admin-btn-editar");
             const btnVer = e.target.closest(".admin-btn-ver");
+            const btnBorrar = e.target.closest(".admin-btn-borrar");
             if (btnEditar) editarProducto(btnEditar.dataset.slug);
             if (btnVer) verProducto(btnVer.dataset.slug);
+            if (btnBorrar) borrarProducto(btnBorrar.dataset.id, btnBorrar.dataset.nombre);
         });
 
-
+        lucide.createIcons();        
     </script>
 
 
