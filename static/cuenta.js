@@ -55,7 +55,7 @@ async function hacerLogin() {
         const user = await res.json();
         saveSession(user);
 
-        if (user.rol === "admin") {
+        if (user.rol === "admin" || user.rol === "owner") {
             localStorage.setItem("admin_token", user.token);
             localStorage.setItem("admin_user", JSON.stringify(user));
         }

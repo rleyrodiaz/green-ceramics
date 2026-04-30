@@ -24,12 +24,23 @@
     <!-- NAVBAR -->
     <nav>
         <a href="/" class="logo">Green<span>.</span></a>
-        <ul>
+
+        <button class="nav-toggle" onclick="toggleMenu()" aria-label="Menú">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+        </button>
+
+        <ul class="nav-menu" id="nav-menu">
+            <button class="nav-close" onclick="toggleMenu()">×</button>
             <li><a href="/catalogo">Colección</a></li>
             <li><a href="/#nosotros">Nosotros</a></li>
             <li><a href="/#contacto">Contacto</a></li>
-            <li><a href="/carrito" class="nav-carrito">Carrito (<span id="cart-count">0</span>)</a></li>
-            <li><a href="/cuenta" style="color:var(--clay)">Cuenta</a></li>
+            <li><a href="/carrito">Carrito (<span id="cart-count">0</span>)</a></li>
+            <li><a href="/cuenta">Cuenta</a></li>
             <li>
                 <a href="/admin/dashboard" id="nav-admin-link" style="display:none;color:var(--clay)">Admin ↗</a>
             </li>

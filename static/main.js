@@ -30,7 +30,7 @@ function updateNavAdmin() {
     const session = JSON.parse(localStorage.getItem("session") || "null");
     const adminLink = document.getElementById("nav-admin-link");
     if (adminLink) {
-        if (session && session.rol === "admin") {
+        if (session && (session.rol === "admin" || session.rol === "owner")) {
             adminLink.style.display = "inline";
         } else {
             adminLink.style.display = "none";
@@ -118,6 +118,21 @@ function enviarConsulta() {
     document.getElementById("c-email").value = "";
     document.getElementById("c-msg").value = "";
 }
+
+function toggleMenu() {
+    const menu = document.getElementById("nav-menu");
+    if (menu) menu.classList.toggle("open");
+}
+
+// Cerrar menú al hacer click en un link
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".nav-menu a").forEach(link => {
+        link.addEventListener("click", () => {
+            const menu = document.getElementById("nav-menu");
+            if (menu) menu.classList.remove("open");
+        });
+    });
+});
 
 // ── Init ──────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
