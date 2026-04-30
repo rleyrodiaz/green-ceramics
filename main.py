@@ -420,6 +420,15 @@ def verificar_admin(credentials: HTTPAuthorizationCredentials = Depends(security
     from services.tokens import verificar_token
     return verificar_token(credentials.credentials)
 
+def verificar_owner(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    from services.tokens import verificar_token
+    if not credentials:
+        raise HTTPException(status_code=403, detail="Acceso denegado.")
+    payload = verificar_token(credentials.credentials)
+    if not payload or payload.get("rol") != "owner":
+        raise HTTPException(status_code=403, detail="Acceso reservado al owner.")
+    return payload    
+
 
 # ── Páginas admin ──────────────────────────────────────────────────
 
@@ -445,6 +454,14 @@ async def admin_ordenes(request: Request):
 @app.get("/admin/usuarios", response_class=HTMLResponse)
 async def admin_usuarios(request: Request):
     return templates.TemplateResponse("admin/usuarios.html", {"request": request})
+
+@app.get("/admin/settings", response_class=HTMLResponse)
+async def admin_settings(request: Request):
+    return templates.TemplateResponse("admin/settings.html", {"request": request}) 
+   
+@app.get("/api/admin/settings/check")
+async def check_owner(owner=Depends(verificar_owner)):
+    return {"ok": True}
 
 # ── API usuarios ───────────────────────────────────────────────────
 

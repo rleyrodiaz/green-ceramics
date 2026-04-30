@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Settings — Admin Green.</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="/static/style.css" />
+    <link rel="stylesheet" href="/static/admin.css" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+
+<body class="admin-body">
+
+    <aside class="admin-sidebar">
+        <a href="/" style="display:block;margin-bottom:2.5rem;font-family:'Cormorant Garamond',serif;
+                           font-size:1.8rem;font-weight:300;letter-spacing:0.15em;
+                           color:var(--cream);text-decoration:none">
+            Green<span style="color:var(--clay)">.</span>
+        </a>
+        <div class="admin-nav">
+            <a href="/admin/dashboard" class="admin-nav-link">Dashboard</a>
+            <a href="/admin/productos" class="admin-nav-link">Productos</a>
+            <a href="/admin/ordenes" class="admin-nav-link">Órdenes</a>
+            <a href="/admin/usuarios" class="admin-nav-link">Usuarios</a>
+            <a href="/admin/settings" class="admin-nav-link nav-settings">Settings</a>
+        </div>
+        <button class="admin-logout" onclick="logout()">Salir</button>
+    </aside>
+
+    <main class="admin-main">
+        <div class="admin-header">
+            <h1 class="admin-title">Settings</h1>
+            <p class="admin-subtitle">Configuración técnica — solo owner</p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem">
+            <div class="quick-card" style="opacity:0.5;cursor:not-allowed">
+                <p class="quick-card-title">Base de datos</p>
+                <p class="quick-card-sub">Inicializar o resetear la DB</p>
+            </div>
+            <div class="quick-card" style="opacity:0.5;cursor:not-allowed">
+                <p class="quick-card-title">API Keys</p>
+                <p class="quick-card-sub">Gestionar claves de servicios externos</p>
+            </div>
+            <div class="quick-card" style="opacity:0.5;cursor:not-allowed">
+                <p class="quick-card-title">Backups</p>
+                <p class="quick-card-sub">Exportar datos de la tienda</p>
+            </div>
+        </div>
+
+        <p style="margin-top:2rem;color:var(--text-muted);font-size:0.85rem">
+            ✦ Funcionalidades en desarrollo
+        </p>
+    </main>
+
+    <!-- <script src="/static/admin.js"></script>
+    <script>
+        verificarAdmin();
+        lucide.createIcons();
+    </script> -->
+
+    <script src="/static/admin.js"></script>
+    <script>
+        verificarAdmin();
+
+        async function verificarOwner() {
+            const token = localStorage.getItem("admin_token");
+            const res = await fetch("/api/admin/settings/check", {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (!res.ok) {
+                alert("Esta sección es solo para el owner.");
+                window.location = "/admin/dashboard";
+            }
+        }
+
+        verificarAdmin();
+        document.addEventListener("DOMContentLoaded", updateSettingsLink);
+
+        lucide.createIcons();
+    </script>
+
+
+
+</body>
+
+</html>

@@ -25,7 +25,7 @@
             <a href="/admin/productos" class="admin-nav-link">Productos</a>
             <a href="/admin/ordenes" class="admin-nav-link">Órdenes</a>
             <a href="/admin/usuarios" class="admin-nav-link active">Usuarios</a>
-            <a href="/admin/settings" class="admin-nav-link">Settings</a>
+            <a href="/admin/settings" class="admin-nav-link nav-settings">Settings</a>
         </div>
         <button class="admin-logout" onclick="logout()">Salir</button>
     </aside>
@@ -63,6 +63,8 @@
     <script src="/static/admin.js"></script>
     <script>
         verificarAdmin();
+        document.addEventListener("DOMContentLoaded", updateSettingsLink);
+
         cargarUsuarios();
 
         async function cargarUsuarios() {

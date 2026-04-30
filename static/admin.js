@@ -226,3 +226,16 @@ async function guardarEdicion() {
         cargarTablaProductos();
     }, 1500);
 }
+
+// ── Settings link ─────────────────────────────────────────────────
+
+function updateSettingsLink() {
+    const user = JSON.parse(localStorage.getItem("admin_user") || "{}");
+    document.querySelectorAll(".nav-settings").forEach(link => {
+        if (user.rol !== "owner") {
+            link.style.cssText = "display:none !important";
+        } else {
+            link.style.display = "block";
+        }
+    });
+}
