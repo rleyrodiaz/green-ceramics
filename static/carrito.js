@@ -87,6 +87,7 @@ function renderCarrito() {
         <div class="carrito-resumen">${resumenHTML}</div>
     `;
 
+
     updateCartCount();
 }
 

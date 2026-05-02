@@ -7,12 +7,9 @@
     {% else %}
     <link rel="icon" href="data:,">
     {% endif %}
-
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Green. — Cerámica en Gres</title>
-    <link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
-    <link rel="shortcut icon" type="image/x-icon" href="/static/favicon.ico" />
     <link
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
         rel="stylesheet" />
@@ -34,7 +31,7 @@
             </svg>
         </button>
 
-        <ul class="nav-menu" id="nav-menu">
+        <ul class="nav-menu" id="nav-menu" style="font-size:0.72rem">
             <button class="nav-close" onclick="toggleMenu()">×</button>
             <li><a href="/catalogo">Colección</a></li>
             <li><a href="/#nosotros">Nosotros</a></li>
@@ -78,9 +75,7 @@
         <p class="section-sub">
             Una selección de lo que está disponible ahora mismo.
         </p>
-        <div class="products-grid" id="products-grid">
-            <!-- cargado desde /api/productos?destacados=true -->
-        </div>
+        <div class="products-grid" id="products-grid"></div>
         <div style="text-align:center; margin-top: 3rem;">
             <a href="/catalogo" class="btn-outline">Ver colección completa</a>
         </div>
@@ -104,16 +99,20 @@
             </p>
             <div class="about-stats">
                 <div>
-                    <div class="stat-num">+200 piezas realizadas</div>
-                    <!-- <div class="stat-label">piezas realizadas</div> -->
+                    <div class="stat-num">+200</div>
+                    <div class="stat-label">piezas realizadas</div>
                 </div>
                 <div>
-                    <div class="stat-num">6 técnicas distintas</div>
-                    <!-- <div class="stat-label">técnicas distintas</div> -->
+                    <div class="stat-num">6</div>
+                    <div class="stat-label">técnicas distintas</div>
                 </div>
                 <div>
-                    <div class="stat-num">100% artesanal</div>
-                    <!-- <div class="stat-label">artesanal</div> -->
+                    <div class="stat-num">100%</div>
+                    <div class="stat-label">artesanal</div>
+                </div>
+                <div>
+                    <div class="stat-num">ARG</div>
+                    <div class="stat-label">hecho en Argentina</div>
                 </div>
             </div>
         </div>
@@ -157,4 +156,27 @@
             </div>
             <div class="contact-item">
                 <p class="contact-label">Email</p>
-                <p class="contact-value">hola@greencera
+                <p class="contact-value">hola@greenceramica.com</p>
+            </div>
+            <div class="contact-item">
+                <p class="contact-label">Envíos</p>
+                <p class="contact-value">Todo el país · Embalaje especial para cerámica</p>
+            </div>
+            <div class="contact-item">
+                <p class="contact-label">Tiempos</p>
+                <p class="contact-value">Respondemos en 24 a 48 horas hábiles</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <a href="/" class="logo">Green<span>.</span></a>
+        <p>© 2025 Green. Cerámica en Gres — Hecho con amor</p>
+        <p>Cada pieza es única e irrepetible</p>
+    </footer>
+
+    <script src="/static/main.js"></script>
+</body>
+
+</html>
