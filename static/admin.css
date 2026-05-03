@@ -323,7 +323,7 @@
     padding-top: 0;
 }
 
-.admin-sidebar a {
+.admin-sidebar a:not(.admin-logo) {
     color: rgba(245, 240, 232, 0.5) !important;
     text-decoration: none !important;
     display: block !important;
@@ -362,31 +362,49 @@
     .admin-sidebar {
         position: relative;
         height: auto;
-        flex-direction: row;
-        align-items: center;
-        padding: 1rem 1.5rem;
-        gap: 1.5rem;
+        flex-direction: column;
+        padding: 0.5rem 0;
+        gap: 0;
+    }
+
+    .admin-logo {
+        display: none !important;
     }
 
     .admin-nav {
         flex-direction: row;
         flex: 1;
         gap: 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+        justify-content: space-around;
     }
 
-    .admin-nav-link {
-        padding: 0.5rem 0.75rem;
+    .admin-body .admin-nav-link {
+        padding: 0.6rem 0.5rem;
+        font-size: 0.6rem;
+        letter-spacing: 0.05em;
         border-left: none;
         border-bottom: 2px solid transparent;
+        white-space: nowrap;
+        flex: 1;
+        text-align: center;
     }
 
-    .admin-nav-link.active {
+    .admin-body .admin-nav-link.active {
         border-left: none;
         border-bottom-color: var(--clay);
     }
 
     .admin-logout {
         margin-top: 0;
+        padding: 0.4rem 1rem;
+        font-size: 0.6rem;
+        width: 100%;
+        border-left: none;
+        border-top: 1px solid rgba(245, 240, 232, 0.1);
+        text-align: center;
     }
 
     .admin-main {
@@ -402,10 +420,6 @@
         grid-template-columns: 1fr;
     }
 
-    .admin-tabla-wrapper {
-        overflow-x: auto;
-    }
-
     .admin-header {
         flex-direction: column;
         align-items: flex-start;
@@ -414,6 +428,10 @@
 
     .admin-filtros-status {
         flex-wrap: wrap;
+    }
+
+    .admin-tabla-wrapper {
+        overflow-x: auto;
     }
 }
 
@@ -476,4 +494,15 @@
 .admin-btn-icon svg {
     width: 14px;
     height: 14px;
+}
+
+.admin-logo {
+    display: block;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    color: var(--cream);
+    text-decoration: none;
+    margin-bottom: 2.5rem;
 }
