@@ -819,3 +819,22 @@ async def webhook_mp(request: Request):
             print(f"✅ Orden {resultado['order_id']} marcada como pagada")
 
     return {"ok": True}    
+
+class ContactoRequest(BaseModel):
+    nombre: str
+    email:  str
+    mensaje: str
+
+@app.post("/api/contacto")
+async def api_contacto(data: ContactoRequest):
+    from services.emails import enviar_email_contacto
+    try:
+        enviar_email_contacto(
+            nombre=data.nombre,
+            email=data.email,
+            mensaje=data.mensaje,
+        )
+        return {"ok": True}
+    except Exception as e:
+        print(f"⚠️ Error email contacto: {e}")
+        raise HTTPException(status_code=500, detail="Error enviando email.")

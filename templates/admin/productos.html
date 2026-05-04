@@ -22,34 +22,21 @@
 </head>
 
 <body class="admin-body">
+    <!--SIDEBAR-->
     <aside class="admin-sidebar">
-        <a href="/"
-            style="display:block; margin-bottom:2.5rem; font-family:'Cormorant Garamond',serif; font-size:1.8rem; font-weight:300; letter-spacing:0.15em; color:var(--cream); text-decoration:none">
+        <a href="/" class="admin-logo">
             Green<span style="color:var(--clay)">.</span>
         </a>
+
         <div class="admin-nav">
             <a href="/admin/dashboard" class="admin-nav-link">Dashboard</a>
-            <a href="/admin/productos" class="admin-nav-link">Productos</a>
+            <a href="/admin/productos" class="admin-nav-link active">Productos</a>
             <a href="/admin/ordenes" class="admin-nav-link">Órdenes</a>
             <a href="/admin/usuarios" class="admin-nav-link">Usuarios</a>
             <a href="/admin/settings" class="admin-nav-link nav-settings">Settings</a>
         </div>
         <button class="admin-logout" onclick="logout()">Salir</button>
     </aside>
-
-
-    <!-- <aside class="admin-sidebar">
-        <a href="/" class="logo" style="display:block; margin-bottom:2.5rem">Green<span>.</span></a>
-        <nav class="admin-nav">
-            <a href="/admin/dashboard" class="admin-nav-link"
-                style="color:rgba(245,240,232,0.5);display:block">Dashboard</a>
-            <a href="/admin/productos" class="admin-nav-link active"
-                style="color:rgba(245,240,232,0.9);display:block">Productos</a>
-            <a href="/admin/ordenes" class="admin-nav-link"
-                style="color:rgba(245,240,232,0.5);display:block">Órdenes</a>
-        </nav>
-        <button class="admin-logout" onclick="logout()">Salir</button>
-    </aside> -->
 
     <main class="admin-main">
         <div class="admin-header">

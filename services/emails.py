@@ -168,3 +168,32 @@ def enviar_confirmacion_pedido(
     except Exception as e:
         print(f"⚠️ Error enviando email: {e}")
         return False
+
+def enviar_email_contacto(nombre: str, email: str, mensaje: str) -> bool:
+    resend.api_key = RESEND_API_KEY
+    html = f"""
+    <body style="font-family:'Jost',sans-serif;background:#f5f0e8;padding:2rem">
+        <div style="max-width:560px;margin:0 auto;background:#fff;padding:2rem">
+            <p style="font-size:0.75rem;letter-spacing:0.3em;text-transform:uppercase;
+                      color:#c4875a">Nueva consulta — Green.</p>
+            <h2 style="font-family:'Georgia',serif;color:#3d2b1f;font-weight:300">
+                {nombre}
+            </h2>
+            <p style="color:#7a6a5a">Email: {email}</p>
+            <hr style="border:none;border-top:1px solid #e8ddd0;margin:1rem 0">
+            <p style="color:#2c1f14;line-height:1.8">{mensaje}</p>
+        </div>
+    </body>
+    """
+    try:
+        resend.Emails.send({
+            "from":    EMAIL_FROM,
+            "to":      "rleyrodiaz@hotmail.com",
+            "reply_to": email,
+            "subject": f"Green. — Consulta de {nombre}",
+            "html":    html,
+        })
+        return True
+    except Exception as e:
+        print(f"⚠️ Error email contacto: {e}")
+        return False

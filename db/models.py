@@ -27,12 +27,12 @@ class OrderStatus(str, enum.Enum):
 
 
 class TechniqueType(str, enum.Enum):
-    torno       = "torno"
+    # torno       = "torno"
     rollos      = "rollos"
     placas      = "placas"
     pellizco    = "pellizco"
     molde       = "molde"
-    raku        = "raku"
+    # raku        = "raku"
     otro        = "otro"
 
 

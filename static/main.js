@@ -61,23 +61,17 @@ function showToast(msg) {
 async function cargarDestacados() {
     const grid = document.getElementById("products-grid");
     if (!grid) return;
-
     try {
         const res = await fetch("/api/productos?destacados=true");
         const productos = await res.json();
-
         if (productos.length === 0) {
             grid.innerHTML = "<p style='color:var(--text-muted)'>Próximamente...</p>";
             return;
         }
-
         grid.innerHTML = productos.map(p => {
             const precio = `$${p.precio.toLocaleString("es-AR")}`;
-            const stockClass = p.stock === 0 ? "no-stock" : p.stock <= 3 ? "low-stock" : "in-stock";
-            const stockText = p.stock === 0 ? "Sin stock" : p.stock <= 3 ? `Últimas ${p.stock}` : "Disponible";
             const imagen = p.imagen || `https://picsum.photos/seed/${p.slug}/400/530`;
             const tag = p.categoria || p.tecnica || "Cerámica";
-
             return `
                 <div class="product-card" onclick="window.location='/producto/${p.slug}'">
                     <div class="product-img">
@@ -98,30 +92,62 @@ async function cargarDestacados() {
             `;
         }).join("");
 
+        // Scroll al hash si existe
+        if (window.location.hash) {
+            setTimeout(() => {
+                const el = document.getElementById(window.location.hash.slice(1));
+                if (el) el.scrollIntoView({ behavior: "smooth" });
+            }, 300);
+        }
+
     } catch (e) {
         console.error("Error cargando productos:", e);
     }
 }
 
 // ── Contacto ──────────────────────────────────────────────────────
-function enviarConsulta() {
-    const name = document.getElementById("c-name")?.value.trim();
+async function enviarConsulta() {
+    const nombre = document.getElementById("c-name")?.value.trim();
     const email = document.getElementById("c-email")?.value.trim();
     const msg = document.getElementById("c-msg")?.value.trim();
-    if (!name || !email || !msg) {
+
+    if (!nombre || !email || !msg) {
         alert("Por favor completá todos los campos.");
         return;
     }
-    // TODO: conectar con endpoint real
-    document.getElementById("contact-success").style.display = "block";
-    document.getElementById("c-name").value = "";
-    document.getElementById("c-email").value = "";
-    document.getElementById("c-msg").value = "";
+
+    try {
+        const res = await fetch("/api/contacto", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nombre, email, mensaje: msg }),
+        });
+
+        if (!res.ok) {
+            alert("Error enviando el mensaje. Intentá de nuevo.");
+            return;
+        }
+
+        document.getElementById("contact-success").style.display = "block";
+        document.getElementById("c-name").value = "";
+        document.getElementById("c-email").value = "";
+        document.getElementById("c-msg").value = "";
+
+    } catch (e) {
+        alert("Error de conexión. Intentá de nuevo.");
+    }
 }
 
 function toggleMenu() {
     const menu = document.getElementById("nav-menu");
     if (menu) menu.classList.toggle("open");
+}
+
+function scrollToSection(id) {
+    setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+    }, 100);
 }
 
 // Cerrar menú al hacer click en un link

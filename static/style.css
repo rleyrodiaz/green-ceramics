@@ -229,6 +229,13 @@ nav a:hover {
 /* ── SECCIONES COMUNES ── */
 section {
     padding: 6rem 5rem;
+    scroll-margin-top: 80px;
+}
+
+@media (max-width: 768px) {
+    section {
+        scroll-margin-top: 60px;
+    }
 }
 
 .section-eyebrow {
@@ -252,6 +259,10 @@ section {
     color: var(--text-muted);
     max-width: 500px;
     margin-bottom: 1.5rem;
+}
+
+section {
+    scroll-margin-top: 80px;
 }
 
 /* ── PRODUCTOS DESTACADOS ── */
