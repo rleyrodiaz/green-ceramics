@@ -286,8 +286,8 @@ async def crear_orden(data: OrdenRequest):
             items_db = db.query(OrderItem).filter(OrderItem.order_id == orden.id).all()
             preferencia = crear_preferencia(orden, items_db)
             orden.mp_preference_id = preferencia["id"]
-            # mp_url = preferencia["sandbox_url"]
-            mp_url = preferencia["init_point"]
+            mp_url = preferencia["sandbox_url"]
+            # mp_url = preferencia["init_point"]
         except Exception as e:
             print(f"⚠️ Error MP: {e}")
             mp_url = None
