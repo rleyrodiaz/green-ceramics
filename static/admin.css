@@ -506,3 +506,10 @@
     text-decoration: none;
     margin-bottom: 2.5rem;
 }
+
+.admin-registros {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    margin-bottom: 1.5rem;
+}

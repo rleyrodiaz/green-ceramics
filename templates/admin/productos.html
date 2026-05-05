@@ -45,6 +45,7 @@
                 + Nuevo producto
             </button>
         </div>
+        <p class="admin-registros" id="productos-count"></p>
 
         <div class="admin-tabla-wrapper">
             <table class="admin-tabla" id="tabla-productos">
@@ -128,12 +129,12 @@
                     <label>Técnica</label>
                     <select id="p-tecnica">
                         <option value="">Sin especificar</option>
-                        <option value="torno">Torno</option>
+                        <!-- <option value="torno">Torno</option> -->
                         <option value="rollos">Rollos</option>
                         <option value="placas">Placas</option>
                         <option value="pellizco">Pellizco</option>
                         <option value="molde">Molde</option>
-                        <option value="raku">Raku</option>
+                        <!-- <option value="raku">Raku</option> -->
                     </select>
                 </div>
             </div>
@@ -219,12 +220,12 @@
                     <label>Técnica</label>
                     <select id="editar-tecnica">
                         <option value="">Sin especificar</option>
-                        <option value="torno">Torno</option>
+                        <!-- <option value="torno">Torno</option> -->
                         <option value="rollos">Rollos</option>
                         <option value="placas">Placas</option>
                         <option value="pellizco">Pellizco</option>
                         <option value="molde">Molde</option>
-                        <option value="raku">Raku</option>
+                        <!-- <option value="raku">Raku</option> -->
                     </select>
                 </div>
             </div>
@@ -295,6 +296,8 @@
                     color:var(--text-muted)">No hay productos cargados.</td></tr>`;
                 return;
             }
+            document.getElementById("productos-count").textContent =
+                `${productos.length} ${productos.length === 1 ? "producto" : "productos"}`;
 
             tbody.innerHTML = productos.map(p => `
                 <tr>
