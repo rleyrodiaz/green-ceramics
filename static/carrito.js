@@ -201,9 +201,17 @@ async function confirmarPedido() {
         document.getElementById("checkout-success").style.display = "block";
         document.getElementById("checkout-error").style.display = "none";
 
-        // Si hay URL de pago de MercadoPago, redirigir
+        // // Si hay URL de pago de MercadoPago, redirigir
+        // if (orden.mp_url) {
+        //     setTimeout(() => window.location = orden.mp_url, 1500);
+        // }
+
+        // Redirigir a MP si hay URL, sino ir directo a exitoso
+        console.log("orden.mp_url: ", orden.mp_url)
         if (orden.mp_url) {
             setTimeout(() => window.location = orden.mp_url, 1500);
+        } else {
+            setTimeout(() => window.location = "/pago/exitoso", 1500);
         }
 
     } catch (e) {

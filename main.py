@@ -287,7 +287,8 @@ async def crear_orden(data: OrdenRequest):
             preferencia = crear_preferencia(orden, items_db)
             orden.mp_preference_id = preferencia["id"]
             # mp_url = preferencia["sandbox_url"]
-            mp_url = preferencia["init_point"]
+            # mp_url = preferencia["init_point"]
+            mp_url = None
         except Exception as e:
             print(f"⚠️ Error MP: {e}")
             mp_url = None
@@ -318,12 +319,16 @@ async def crear_orden(data: OrdenRequest):
         except Exception as e:
             print(f"⚠️ Error email: {e}")            
 
+        # Si no hay URL de MP, marcar como pagada directamente
+        if not mp_url:
+            orden.status = OrderStatus.paid
+            print(f"✅ Orden {orden.id} marcada como paid")
+
         return {
             "orden_id": orden.id,
             "total":    total,
             "mp_url":   mp_url,
         }
-
 
 # ── Helper ──────────────────────────────────────────────────────────
 
@@ -334,7 +339,7 @@ async def crear_orden(data: OrdenRequest):
 def _primary_image(product) -> str:
     from services.products import get_primary_image_url
     url = get_primary_image_url(product, fallback="")
-    print(f"🖼️ imagen de {product.slug}: '{url}' | imágenes: {len(product.images)}")
+    # print(f"🖼️ imagen de {product.slug}: '{url}' | imágenes: {len(product.images)}")
     return url
 
 
