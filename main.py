@@ -287,11 +287,11 @@ async def crear_orden(data: OrdenRequest):
             preferencia = crear_preferencia(orden, items_db)
             orden.mp_preference_id = preferencia["id"]
             # mp_url = preferencia["sandbox_url"]
-            # mp_url = preferencia["init_point"]
-            mp_url = None
+            mp_url = preferencia["init_point"]
+            #mp_url = None
         except Exception as e:
             print(f"⚠️ Error MP: {e}")
-            mp_url = None
+            raise HTTPException(status_code=500, detail="Error al procesar el pago. Intentá de nuevo.")
 
         # Enviar email de confirmación
         try:
@@ -317,12 +317,7 @@ async def crear_orden(data: OrdenRequest):
             )
             print(f"✅ Email enviado a {data.email}")
         except Exception as e:
-            print(f"⚠️ Error email: {e}")            
-
-        # Si no hay URL de MP, marcar como pagada directamente
-        if not mp_url:
-            orden.status = OrderStatus.paid
-            print(f"✅ Orden {orden.id} marcada como paid")
+            print(f"⚠️ Error email: {e}")
 
         return {
             "orden_id": orden.id,
@@ -802,28 +797,26 @@ async def pago_pendiente(request: Request):
 
 @app.post("/api/webhook/mp")
 async def webhook_mp(request: Request):
+    from config.settings import MP_WEBHOOK_SECRET
+    from services.payments import procesar_webhook, verificar_firma_webhook
+    from services.orders import update_order_status
+
+    if MP_WEBHOOK_SECRET:
+        if not verificar_firma_webhook(request, MP_WEBHOOK_SECRET):
+            raise HTTPException(status_code=401, detail="Firma inválida")
+
     data = await request.json()
     print(f"📩 Webhook MP: {data}")
-
-    from services.payments import procesar_webhook
-    from services.orders import confirm_payment
 
     resultado = procesar_webhook(data)
     if not resultado:
         return {"ok": True}
 
-    if resultado["status"] == "approved":
-        confirm_payment(
-            mp_payment_id=resultado["payment_id"],
-            mp_preference_id="",  # usamos external_reference
-        )
-        # Actualizar por order_id directamente
-        from services.orders import update_order_status
-        if resultado["order_id"]:
-            update_order_status(resultado["order_id"], "paid")
-            print(f"✅ Orden {resultado['order_id']} marcada como pagada")
+    if resultado["status"] == "approved" and resultado["order_id"]:
+        update_order_status(resultado["order_id"], "paid")
+        print(f"✅ Orden {resultado['order_id']} marcada como pagada")
 
-    return {"ok": True}    
+    return {"ok": True}
 
 class ContactoRequest(BaseModel):
     nombre: str

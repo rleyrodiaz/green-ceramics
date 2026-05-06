@@ -46,8 +46,9 @@ CLOUDINARY_CONFIG = {
 }
 
 # MercadoPago
-MP_ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN")
-MP_PUBLIC_KEY = os.getenv("MP_PUBLIC_KEY")
+MP_ACCESS_TOKEN    = os.getenv("MP_ACCESS_TOKEN")
+MP_PUBLIC_KEY      = os.getenv("MP_PUBLIC_KEY")
+MP_WEBHOOK_SECRET  = os.getenv("MP_WEBHOOK_SECRET")
 
 # Resend
 RESEND_API_KEY = os.getenv("RESEND_API_KEY")

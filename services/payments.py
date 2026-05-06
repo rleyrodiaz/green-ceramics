@@ -1,3 +1,5 @@
+import hmac
+import hashlib
 import mercadopago
 from config.settings import MP_ACCESS_TOKEN, MP_PUBLIC_KEY
 from db.connection import get_db
@@ -32,7 +34,7 @@ def crear_preferencia(order: Order, items: list) -> dict:
         #     "failure": "http://localhost:8000/pago/fallido",
         #     "pending": "http://localhost:8000/pago/pendiente",
         # },
-        # "auto_return": "approved",
+        "auto_return": "approved",
         "external_reference": str(order.id),
         "statement_descriptor": "Green Ceramica",
         "metadata": {
@@ -78,3 +80,24 @@ def procesar_webhook(data: dict) -> dict | None:
         "status":     status,  # "approved", "pending", "rejected"
         "amount":     payment.get("transaction_amount"),
     }
+
+
+def verificar_firma_webhook(request, secret: str) -> bool:
+    signature_header = request.headers.get("x-signature", "")
+    request_id       = request.headers.get("x-request-id", "")
+    data_id          = request.query_params.get("data.id", "")
+
+    ts = v1 = ""
+    for part in signature_header.split(","):
+        key, _, value = part.partition("=")
+        if key.strip() == "ts":
+            ts = value.strip()
+        elif key.strip() == "v1":
+            v1 = value.strip()
+
+    if not ts or not v1:
+        return False
+
+    manifest = f"id:{data_id};request-id:{request_id};ts:{ts}"
+    expected = hmac.new(secret.encode(), manifest.encode(), hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, v1)
