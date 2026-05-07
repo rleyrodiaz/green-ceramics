@@ -50,6 +50,11 @@ MP_ACCESS_TOKEN    = os.getenv("MP_ACCESS_TOKEN")
 MP_PUBLIC_KEY      = os.getenv("MP_PUBLIC_KEY")
 MP_WEBHOOK_SECRET  = os.getenv("MP_WEBHOOK_SECRET")
 
+# Banco (transferencia)
+BANK_CBU    = os.getenv("BANK_CBU", "")
+BANK_ALIAS  = os.getenv("BANK_ALIAS", "")
+BANK_HOLDER = os.getenv("BANK_HOLDER", "")
+
 # Resend
 RESEND_API_KEY = os.getenv("RESEND_API_KEY")
 EMAIL_FROM     = os.getenv("EMAIL_FROM", "onboarding@resend.dev")

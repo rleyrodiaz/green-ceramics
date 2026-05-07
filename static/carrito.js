@@ -145,6 +145,23 @@ document.getElementById("modal-overlay").addEventListener("click", e => {
     if (e.target === document.getElementById("modal-overlay")) cerrarModal();
 });
 
+// ── Método de pago ────────────────────────────────────────────────
+function selectPayment(method) {
+    const active   = { border: "2px solid #c4875a", background: "#fdf6f0" };
+    const inactive = { border: "2px solid #ddd",    background: "#fff"    };
+
+    const mp  = document.getElementById("pm-mp-box");
+    const tr  = document.getElementById("pm-transfer-box");
+    const sel = method === "mp" ? { mp: active, tr: inactive } : { mp: inactive, tr: active };
+
+    mp.style.border     = sel.mp.border;
+    mp.style.background = sel.mp.background;
+    tr.style.border     = sel.tr.border;
+    tr.style.background = sel.tr.background;
+
+    document.getElementById(method === "mp" ? "pm-mp" : "pm-transfer").checked = true;
+}
+
 // ── Confirmar pedido ──────────────────────────────────────────────
 async function confirmarPedido() {
     const name = document.getElementById("sh-name").value.trim();
@@ -182,6 +199,7 @@ async function confirmarPedido() {
                 provincia: province,
                 cp: zip,
                 notas: notes,
+                payment_method: document.querySelector("input[name='payment_method']:checked").value,
                 items,
             }),
         });
@@ -206,10 +224,10 @@ async function confirmarPedido() {
         //     setTimeout(() => window.location = orden.mp_url, 1500);
         // }
 
-        // Redirigir a MP si hay URL, sino ir directo a exitoso
-        console.log("orden.mp_url: ", orden.mp_url)
         if (orden.mp_url) {
             setTimeout(() => window.location = orden.mp_url, 1500);
+        } else if (orden.payment_method === "transfer") {
+            setTimeout(() => window.location = `/pago/transferencia?orden_id=${orden.orden_id}&total=${orden.total}`, 1500);
         } else {
             setTimeout(() => window.location = "/pago/exitoso", 1500);
         }

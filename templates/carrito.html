@@ -115,6 +115,22 @@
 
             <div class="modal-resumen" id="modal-resumen"></div>
 
+            <div class="form-group" style="margin-bottom:1.5rem">
+                <label style="margin-bottom:0.75rem;display:block">Método de pago</label>
+                <input type="radio" name="payment_method" value="mp" checked id="pm-mp" style="display:none">
+                <input type="radio" name="payment_method" value="transfer" id="pm-transfer" style="display:none">
+                <div style="display:flex;gap:0.75rem">
+                    <div id="pm-mp-box" onclick="selectPayment('mp')"
+                         style="flex:1;cursor:pointer;border:2px solid #c4875a;background:#fdf6f0;padding:0.9rem;text-align:center;border-radius:2px;font-size:0.85rem">
+                        Mercado Pago
+                    </div>
+                    <div id="pm-transfer-box" onclick="selectPayment('transfer')"
+                         style="flex:1;cursor:pointer;border:2px solid #ddd;background:#fff;padding:0.9rem;text-align:center;border-radius:2px;font-size:0.85rem">
+                        Transferencia
+                    </div>
+                </div>
+            </div>
+
             <button class="btn-primary" style="width:100%" onclick="confirmarPedido()">
                 Confirmar y pagar
             </button>

@@ -157,22 +157,30 @@ async function cargarPedidos(userId) {
         }
 
         const statusLabel = {
-            pending: "⏳ Pendiente",
-            paid: "✅ Pagado",
+            pending:   "⏳ Pendiente de pago",
+            verifying: "🔍 Comprobante en revisión",
+            paid:      "✅ Pagado",
             preparing: "🔨 Preparando",
-            shipped: "🚚 Enviado",
+            shipped:   "🚚 Enviado",
             delivered: "📦 Entregado",
             cancelled: "❌ Cancelado",
         };
 
-        lista.innerHTML = pedidos.map(p => `
+        lista.innerHTML = pedidos.map(p => {
+            const esTransfer = p.payment_method === "transfer";
+            const puedeSubir = esTransfer && ["pending", "verifying"].includes(p.status);
+            const labelComprobante = p.comprobante_url
+                ? "Reemplazar comprobante"
+                : "Subir comprobante";
+
+            return `
             <div class="pedido-card">
                 <div class="pedido-header">
                     <div>
                         <p class="pedido-num">Pedido #${p.id}</p>
                         <p class="pedido-fecha">${new Date(p.created_at).toLocaleDateString("es-AR", {
-            day: "numeric", month: "long", year: "numeric"
-        })}</p>
+                            day: "numeric", month: "long", year: "numeric"
+                        })}</p>
                     </div>
                     <span class="pedido-status">${statusLabel[p.status] || p.status}</span>
                 </div>
@@ -187,8 +195,18 @@ async function cargarPedidos(userId) {
                 <div class="pedido-total">
                     Total: $${p.total.toLocaleString("es-AR")}
                 </div>
-            </div>
-        `).join("");
+                ${puedeSubir ? `
+                <div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--border-light,#eee)">
+                    <input type="file" id="comp-input-${p.id}" accept="image/*,.pdf" style="display:none"
+                           onchange="uploadComprobante(${p.id}, this)">
+                    <button class="btn-outline" style="font-size:0.8rem;padding:0.4rem 1rem"
+                            onclick="document.getElementById('comp-input-${p.id}').click()">
+                        ${labelComprobante}
+                    </button>
+                    <span id="comp-msg-${p.id}" style="font-size:0.8rem;margin-left:0.75rem;color:var(--text-muted)"></span>
+                </div>` : ""}
+            </div>`;
+        }).join("");
 
     } catch (e) {
         lista.innerHTML = "<p style='color:var(--text-muted)'>Error cargando pedidos.</p>";
@@ -201,6 +219,38 @@ function guardarDatos() {
     setTimeout(() => {
         document.getElementById("datos-success").style.display = "none";
     }, 3000);
+}
+
+// ── Upload comprobante desde cuenta ───────────────────────────────
+async function uploadComprobante(ordenId, input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const msg = document.getElementById(`comp-msg-${ordenId}`);
+    msg.textContent = "Enviando...";
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+        const res = await fetch(`/api/ordenes/${ordenId}/comprobante`, {
+            method: "POST",
+            body:   formData,
+        });
+        if (res.ok) {
+            msg.textContent = "✅ Comprobante enviado";
+            msg.style.color = "var(--sage, green)";
+            const session = getSession();
+            setTimeout(() => cargarPedidos(session.id), 1500);
+        } else {
+            const data = await res.json().catch(() => ({}));
+            msg.textContent = data.detail || "Error al enviar.";
+            msg.style.color = "#c0392b";
+        }
+    } catch {
+        msg.textContent = "Error de conexión.";
+        msg.style.color = "#c0392b";
+    }
 }
 
 // ── Helper ────────────────────────────────────────────────────────

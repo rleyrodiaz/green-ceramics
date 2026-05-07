@@ -19,11 +19,17 @@ class UserRole(str, enum.Enum):
 
 class OrderStatus(str, enum.Enum):
     pending   = "pending"    # creado, sin pagar
+    verifying = "verifying"  # comprobante recibido, pendiente de verificación
     paid      = "paid"       # pago confirmado
     preparing = "preparing"  # en preparación
     shipped   = "shipped"    # enviado
     delivered = "delivered"  # entregado
     cancelled = "cancelled"  # cancelado
+
+
+class PaymentMethod(str, enum.Enum):
+    mp       = "mp"
+    transfer = "transfer"
 
 
 class TechniqueType(str, enum.Enum):
@@ -133,6 +139,10 @@ class Order(Base):
     shipping_province: Mapped[str]        = mapped_column(String(80), nullable=True)
     shipping_zip    : Mapped[str]         = mapped_column(String(20), nullable=True)
     shipping_phone  : Mapped[str]         = mapped_column(String(30), nullable=True)
+
+    # Pago
+    payment_method  : Mapped[PaymentMethod] = mapped_column(PgEnum(PaymentMethod), default=PaymentMethod.mp, nullable=True)
+    comprobante_url : Mapped[str]           = mapped_column(String(500), nullable=True)
 
     # MercadoPago
     mp_preference_id: Mapped[str]         = mapped_column(String(200), nullable=True)

@@ -114,6 +114,45 @@ def _delete_local(public_id: str) -> None:
 
 
 
+def upload_comprobante(file_bytes: bytes, orden_id: int, filename: str = "") -> dict:
+    ext = Path(filename).suffix.lower() if filename else ".jpg"
+    if STORAGE_BACKEND == "cloudinary":
+        return _upload_comprobante_cloudinary(file_bytes, orden_id, ext)
+    return _upload_comprobante_local(file_bytes, orden_id, ext)
+
+
+def _upload_comprobante_cloudinary(file_bytes: bytes, orden_id: int, ext: str = ".jpg") -> dict:
+    import cloudinary
+    import cloudinary.uploader
+    from config.settings import CLOUDINARY_CONFIG
+
+    cloudinary.config(
+        cloud_name=CLOUDINARY_CONFIG["cloud_name"],
+        api_key=CLOUDINARY_CONFIG["api_key"],
+        api_secret=CLOUDINARY_CONFIG["api_secret"],
+        secure=True,
+    )
+    fmt = "jpg" if ext == ".pdf" else None
+    upload_args = dict(
+        folder="ceramics_shop/comprobantes",
+        public_id=f"orden_{orden_id}",
+        resource_type="image",
+        overwrite=True,
+    )
+    if fmt:
+        upload_args["format"] = fmt
+    result = cloudinary.uploader.upload(file_bytes, **upload_args)
+    return {"url": result["secure_url"], "public_id": result["public_id"]}
+
+
+def _upload_comprobante_local(file_bytes: bytes, orden_id: int, ext: str = ".jpg") -> dict:
+    dest = Path("static/comprobantes")
+    dest.mkdir(parents=True, exist_ok=True)
+    filename = f"comprobante_{orden_id}_{uuid.uuid4().hex[:8]}{ext}"
+    (dest / filename).write_bytes(file_bytes)
+    return {"url": f"/static/comprobantes/{filename}", "public_id": filename}
+
+
 def get_image_url(url: str) -> str:
     """
     Cloudinary: URL absoluta, se retorna tal cual.

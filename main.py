@@ -69,6 +69,21 @@ async def lifespan(app: FastAPI):
             db.add(admin)
             print("✅ Admin creado")
 
+    # Auto-migración: columnas nuevas en orders
+    from sqlalchemy import text, inspect as sa_inspect
+    with engine.connect() as conn:
+        cols = [c["name"] for c in sa_inspect(engine).get_columns("orders")]
+        if "payment_method" not in cols:
+            conn.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method VARCHAR DEFAULT 'mp'"))
+            conn.commit()
+            print("✅ Columna payment_method agregada")
+        if "comprobante_url" not in cols:
+            conn.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS comprobante_url VARCHAR(500)"))
+            conn.commit()
+            print("✅ Columna comprobante_url agregada")
+        conn.execute(text("ALTER TYPE orderstatus ADD VALUE IF NOT EXISTS 'verifying' AFTER 'pending'"))
+        conn.commit()
+
     test_connection()
     print("✅ DB lista")
     yield
@@ -201,15 +216,16 @@ class ItemOrden(BaseModel):
     nombre:      str
 
 class OrdenRequest(BaseModel):
-    nombre:    str
-    email:     str
-    telefono:  str = ""
-    direccion: str
-    ciudad:    str
-    provincia: str
-    cp:        str
-    notas:     str = ""
-    items:     list[ItemOrden]
+    nombre:         str
+    email:          str
+    telefono:       str = ""
+    direccion:      str
+    ciudad:         str
+    provincia:      str
+    cp:             str
+    notas:          str = ""
+    payment_method: str = "mp"
+    items:          list[ItemOrden]
 
 
 @app.post("/api/ordenes")
@@ -247,9 +263,11 @@ async def crear_orden(data: OrdenRequest):
         envio    = 0 ### if subtotal >= 50000 else 3500
         total    = subtotal + envio
 
+        from db.models import PaymentMethod
         orden = Order(
             user_id           = user_id,
             status            = OrderStatus.pending,
+            payment_method    = PaymentMethod(data.payment_method),
             subtotal          = Decimal(str(subtotal)),
             shipping_cost     = Decimal(str(envio)),
             total             = Decimal(str(total)),
@@ -280,18 +298,18 @@ async def crear_orden(data: OrdenRequest):
 
         db.flush()
 
-        # Generar preferencia de MercadoPago
-        try:
-            from services.payments import crear_preferencia
-            items_db = db.query(OrderItem).filter(OrderItem.order_id == orden.id).all()
-            preferencia = crear_preferencia(orden, items_db)
-            orden.mp_preference_id = preferencia["id"]
-            # mp_url = preferencia["sandbox_url"]
-            mp_url = preferencia["init_point"]
-            #mp_url = None
-        except Exception as e:
-            print(f"⚠️ Error MP: {e}")
-            raise HTTPException(status_code=500, detail="Error al procesar el pago. Intentá de nuevo.")
+        # Generar preferencia de MercadoPago (solo si paga con MP)
+        mp_url = None
+        if data.payment_method == "mp":
+            try:
+                from services.payments import crear_preferencia
+                items_db = db.query(OrderItem).filter(OrderItem.order_id == orden.id).all()
+                preferencia = crear_preferencia(orden, items_db)
+                orden.mp_preference_id = preferencia["id"]
+                mp_url = preferencia["init_point"]
+            except Exception as e:
+                print(f"⚠️ Error MP: {e}")
+                raise HTTPException(status_code=500, detail="Error al procesar el pago. Intentá de nuevo.")
 
         # Enviar email de confirmación
         try:
@@ -320,9 +338,10 @@ async def crear_orden(data: OrdenRequest):
             print(f"⚠️ Error email: {e}")
 
         return {
-            "orden_id": orden.id,
-            "total":    total,
-            "mp_url":   mp_url,
+            "orden_id":       orden.id,
+            "total":          total,
+            "mp_url":         mp_url,
+            "payment_method": data.payment_method,
         }
 
 # ── Helper ──────────────────────────────────────────────────────────
@@ -391,10 +410,12 @@ async def api_ordenes_usuario(user_id: int, request: Request):
     orders = get_orders_by_user(user_id)
     return [
         {
-            "id":         o.id,
-            "status":     o.status.value,
-            "total":      float(o.total),
-            "created_at": o.created_at.isoformat(),
+            "id":             o.id,
+            "status":         o.status.value,
+            "total":          float(o.total),
+            "created_at":     o.created_at.isoformat(),
+            "payment_method": o.payment_method.value if o.payment_method else "mp",
+            "comprobante_url": o.comprobante_url,
             "items": [
                 {
                     "product_name": i.product_name,
@@ -560,13 +581,15 @@ async def api_admin_ordenes(
     orders = get_all_orders(status=status)
     return [
         {
-            "id":       o.id,
-            "status":   o.status.value,
-            "total":    float(o.total),
-            "nombre":   o.shipping_name,
-            "email":    "",
-            "ciudad":   o.shipping_city,
-            "created_at": o.created_at.isoformat(),
+            "id":             o.id,
+            "status":         o.status.value,
+            "total":          float(o.total),
+            "nombre":         o.shipping_name,
+            "email":          "",
+            "ciudad":         o.shipping_city,
+            "created_at":     o.created_at.isoformat(),
+            "payment_method": o.payment_method.value if o.payment_method else "mp",
+            "comprobante_url": o.comprobante_url,
             "items": [
                 {
                     "product_name": i.product_name,
@@ -774,6 +797,56 @@ async def api_borrar_producto(
         db.delete(product)
 
     return {"ok": True}
+
+
+# ── Transferencia bancaria ─────────────────────────────────────────
+
+@app.get("/api/banco")
+async def api_banco():
+    from config.settings import BANK_CBU, BANK_ALIAS, BANK_HOLDER
+    return {"cbu": BANK_CBU, "alias": BANK_ALIAS, "titular": BANK_HOLDER}
+
+
+@app.post("/api/ordenes/{orden_id}/comprobante")
+async def subir_comprobante(orden_id: int, request: Request):
+    from fastapi import UploadFile
+    from services.storage import upload_comprobante
+    from db.connection import get_db
+    from db.models import Order, OrderStatus
+
+    form  = await request.form()
+    file  = form.get("file")
+    if not file:
+        raise HTTPException(status_code=400, detail="No se recibió archivo.")
+
+    file_bytes = await file.read()
+
+    # Validar tipo de archivo por magic bytes
+    is_jpeg = file_bytes[:3] == b'\xff\xd8\xff'
+    is_png  = file_bytes[:8] == b'\x89PNG\r\n\x1a\n'
+    is_webp = file_bytes[:4] == b'RIFF' and file_bytes[8:12] == b'WEBP'
+    is_pdf  = file_bytes[:4] == b'%PDF'
+    if not (is_jpeg or is_png or is_webp or is_pdf):
+        raise HTTPException(status_code=400, detail="Solo se aceptan imágenes (JPG, PNG) o PDF.")
+
+    result = upload_comprobante(file_bytes, orden_id, filename=file.filename or "")
+
+    with get_db() as db:
+        orden = db.query(Order).filter(Order.id == orden_id).first()
+        if not orden:
+            raise HTTPException(status_code=404, detail="Orden no encontrada.")
+        orden.comprobante_url = result["url"]
+        orden.status = OrderStatus.verifying
+
+    return {"ok": True, "url": result["url"]}
+
+
+@app.get("/pago/transferencia", response_class=HTMLResponse)
+async def pago_transferencia(request: Request):
+    return templates.TemplateResponse("pago_transferencia.html", {
+        "request":       request,
+        "is_production": IS_PRODUCTION,
+    })
 
 
 # ── Páginas de retorno MercadoPago ─────────────────────────────────

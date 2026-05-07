@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    {% if is_production %}
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    {% else %}
+    <link rel="icon" href="data:,">
+    {% endif %}
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Transferencia — Green.</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
+    <link rel="shortcut icon" type="image/x-icon" href="/static/favicon.ico" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+
+    <nav>
+        <a href="/" class="logo">Green<span>.</span></a>
+        <button class="nav-toggle" onclick="toggleMenu()" aria-label="Menú">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+        </button>
+        <ul class="nav-menu" id="nav-menu" style="font-size:0.72rem">
+            <button class="nav-close" onclick="toggleMenu()">×</button>
+            <li><a href="/catalogo">Colección</a></li>
+            <li><a href="/#nosotros" onclick="scrollToSection('nosotros')">Nosotros</a></li>
+            <li><a href="/#contacto" onclick="scrollToSection('contacto')">Contacto</a></li>
+            <li><a href="/carrito">Carrito (<span id="cart-count">0</span>)</a></li>
+            <li><a href="/cuenta">Cuenta</a></li>
+            <li>
+                <a href="/admin/dashboard" id="nav-admin-link" style="display:none;color:var(--clay)">Admin ↗</a>
+            </li>
+        </ul>
+    </nav>
+
+    <div style="min-height:80vh;max-width:520px;margin:0 auto;padding:6rem 1.5rem 4rem">
+        <p class="section-eyebrow">Último paso</p>
+        <h1 class="hero-title" style="font-size:2.4rem;margin-bottom:0.5rem">Pagá por transferencia</h1>
+        <p style="color:var(--text-muted);margin-bottom:2.5rem">
+            Realizá la transferencia y adjuntá el comprobante. Confirmamos tu pedido en menos de 24 hs.
+        </p>
+
+        <!-- Datos bancarios -->
+        <div style="background:var(--cream);border:1px solid var(--border);padding:1.75rem;margin-bottom:2rem;border-radius:2px">
+            <p style="font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:1.25rem">
+                Datos para la transferencia
+            </p>
+            <div style="display:grid;gap:1rem">
+                <div>
+                    <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.2rem">CBU</p>
+                    <p id="dato-cbu" style="font-size:1rem;letter-spacing:0.05em">—</p>
+                </div>
+                <div>
+                    <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.2rem">Alias</p>
+                    <p id="dato-alias" style="font-size:1rem">—</p>
+                </div>
+                <div>
+                    <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.2rem">Titular</p>
+                    <p id="dato-titular" style="font-size:1rem">—</p>
+                </div>
+                <div style="border-top:1px solid var(--border);padding-top:1rem;margin-top:0.25rem">
+                    <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.2rem">Monto a transferir</p>
+                    <p id="dato-total" style="font-size:1.2rem;font-weight:500;color:var(--clay)">—</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload comprobante -->
+        <div id="upload-section">
+            <p style="margin-bottom:1rem;font-size:0.9rem">Adjuntá el comprobante de transferencia:</p>
+            <div style="border:1.5px dashed var(--border);padding:1.5rem;text-align:center;border-radius:2px;margin-bottom:1rem;cursor:pointer"
+                 onclick="document.getElementById('comprobante-input').click()">
+                <p id="file-label" style="color:var(--text-muted);font-size:0.85rem">
+                    Hacé click para seleccionar imagen (JPG, PNG) o PDF
+                </p>
+            </div>
+            <input type="file" id="comprobante-input" accept="image/*,.pdf"
+                   style="display:none" onchange="onFileSelected(this)">
+            <button class="btn-primary" style="width:100%" onclick="subirComprobante()" id="btn-subir" disabled>
+                Enviar comprobante
+            </button>
+            <p id="upload-error" style="color:#c0392b;font-size:0.85rem;margin-top:0.75rem;display:none"></p>
+        </div>
+
+        <!-- Éxito -->
+        <div id="upload-success" style="display:none;text-align:center;padding:2rem 0">
+            <p class="section-eyebrow" style="color:var(--sage)">Comprobante recibido</p>
+            <h2 style="margin-bottom:1rem">¡Gracias!</h2>
+            <p style="color:var(--text-muted);margin-bottom:2rem">
+                Vamos a verificar tu pago y confirmar el pedido en las próximas 24 hs.
+            </p>
+            <div style="display:flex;gap:1rem;justify-content:center">
+                <a href="/catalogo" class="btn-outline">Seguir comprando</a>
+                <a href="/cuenta" class="btn-primary">Ver mis pedidos</a>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <a href="/" class="logo">Green<span>.</span></a>
+        <p>© 2026 Green. Cerámica en Gres</p>
+    </footer>
+
+    <script src="/static/main.js"></script>
+    <script>
+        const params   = new URLSearchParams(window.location.search);
+        const ordenId  = params.get("orden_id");
+        const total    = params.get("total");
+
+        if (total) {
+            document.getElementById("dato-total").textContent =
+                "$" + parseFloat(total).toLocaleString("es-AR");
+        }
+
+        fetch("/api/banco")
+            .then(r => r.json())
+            .then(d => {
+                document.getElementById("dato-cbu").textContent     = d.cbu    || "—";
+                document.getElementById("dato-alias").textContent   = d.alias  || "—";
+                document.getElementById("dato-titular").textContent = d.titular || "—";
+            });
+
+        function onFileSelected(input) {
+            const file = input.files[0];
+            if (file) {
+                document.getElementById("file-label").textContent = file.name;
+                document.getElementById("btn-subir").disabled = false;
+            }
+        }
+
+        async function subirComprobante() {
+            const file = document.getElementById("comprobante-input").files[0];
+            if (!file || !ordenId) return;
+
+            const btn = document.getElementById("btn-subir");
+            btn.disabled = true;
+            btn.textContent = "Enviando...";
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const res = await fetch(`/api/ordenes/${ordenId}/comprobante`, {
+                    method: "POST",
+                    body:   formData,
+                });
+                if (res.ok) {
+                    document.getElementById("upload-section").style.display  = "none";
+                    document.getElementById("upload-success").style.display  = "block";
+                } else {
+                    const data = await res.json().catch(() => ({}));
+                    throw new Error(data.detail || "Error al enviar el comprobante.");
+                }
+            } catch (e) {
+                const err = document.getElementById("upload-error");
+                err.textContent = e.message || "Error al enviar el comprobante. Intentá de nuevo.";
+                err.style.display = "block";
+                btn.disabled = false;
+                btn.textContent = "Enviar comprobante";
+            }
+        }
+    </script>
+</body>
+
+</html>

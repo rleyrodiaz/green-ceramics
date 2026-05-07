@@ -60,6 +60,9 @@
                 <button class="filtro-status" data-status="pending" onclick="filtrarOrdenes('pending', this)">
                     Pendientes
                 </button>
+                <button class="filtro-status" data-status="verifying" onclick="filtrarOrdenes('verifying', this)">
+                    A verificar
+                </button>
                 <button class="filtro-status" data-status="paid" onclick="filtrarOrdenes('paid', this)">
                     Pagadas
                 </button>
@@ -82,6 +85,7 @@
                         <th>Ciudad</th>
                         <th>Items</th>
                         <th>Total</th>
+                        <th>Pago</th>
                         <th>Estado</th>
                         <th>Fecha</th>
                         <th>Acción</th>
@@ -119,26 +123,29 @@
             }
 
             const statusLabel = {
-                pending: "Pendiente",
-                paid: "Pagada",
+                pending:   "Pendiente",
+                verifying: "A verificar",
+                paid:      "Pagada",
                 preparing: "Preparando",
-                shipped: "Enviada",
+                shipped:   "Enviada",
                 delivered: "Entregada",
                 cancelled: "Cancelada",
             };
 
             const nextStatus = {
-                pending: "paid",
-                paid: "preparing",
+                pending:   "verifying",
+                verifying: "paid",
+                paid:      "preparing",
                 preparing: "shipped",
-                shipped: "delivered",
+                shipped:   "delivered",
             };
 
             const nextLabel = {
-                pending: "Marcar pagada",
-                paid: "Preparando",
+                pending:   "A verificar",
+                verifying: "Marcar pagada",
+                paid:      "Preparando",
                 preparing: "Marcar enviada",
-                shipped: "Marcar entregada",
+                shipped:   "Marcar entregada",
             };
 
             document.getElementById("ordenes-count").textContent =
@@ -149,6 +156,11 @@
                 const itemsText = o.items.map(i => `${i.product_name} ×${i.quantity}`).join(", ");
                 const next = nextStatus[o.status];
 
+                const pagoLabel = o.payment_method === "transfer" ? "Transferencia" : "Mercado Pago";
+                const comprobanteLink = o.comprobante_url
+                    ? `<a href="${o.comprobante_url}" target="_blank" style="font-size:0.78rem;color:var(--clay)">Ver comprobante</a>`
+                    : "";
+
                 return `
                     <tr>
                         <td>#${o.id}</td>
@@ -158,6 +170,10 @@
                             ${itemsText}
                         </td>
                         <td>$${o.total.toLocaleString("es-AR")}</td>
+                        <td style="font-size:0.82rem">
+                            ${pagoLabel}
+                            ${comprobanteLink ? `<br>${comprobanteLink}` : ""}
+                        </td>
                         <td>
                             <span class="admin-badge badge-${o.status}">
                                 ${statusLabel[o.status] || o.status}
