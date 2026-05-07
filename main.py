@@ -84,6 +84,26 @@ async def lifespan(app: FastAPI):
         conn.execute(text("ALTER TYPE orderstatus ADD VALUE IF NOT EXISTS 'verifying' AFTER 'pending'"))
         conn.commit()
 
+    # Crear tabla activity_logs si no existe + nuevas columnas
+    import db.models  # noqa
+    Base.metadata.create_all(bind=engine)
+    with engine.connect() as conn:
+        log_cols = [c["name"] for c in sa_inspect(engine).get_columns("activity_logs")]
+        new_log_cols = {
+            "session_id":  "VARCHAR(36)",
+            "country":     "VARCHAR(60)",
+            "city":        "VARCHAR(60)",
+            "device_type": "VARCHAR(20)",
+            "browser":     "VARCHAR(60)",
+            "os":          "VARCHAR(60)",
+            "referrer":    "VARCHAR(300)",
+        }
+        for col, coltype in new_log_cols.items():
+            if col not in log_cols:
+                conn.execute(text(f"ALTER TABLE activity_logs ADD COLUMN IF NOT EXISTS {col} {coltype}"))
+                conn.commit()
+                print(f"✅ Columna activity_logs.{col} agregada")
+
     test_connection()
     print("✅ DB lista")
     yield
@@ -229,7 +249,7 @@ class OrdenRequest(BaseModel):
 
 
 @app.post("/api/ordenes")
-async def crear_orden(data: OrdenRequest):
+async def crear_orden(data: OrdenRequest, request: Request):
     from services.orders import create_order_from_cart
     from services import cart as cart_service
     from db.models import User
@@ -337,12 +357,20 @@ async def crear_orden(data: OrdenRequest):
         except Exception as e:
             print(f"⚠️ Error email: {e}")
 
-        return {
+        _orden_id = orden.id
+        _result   = {
             "orden_id":       orden.id,
             "total":          total,
             "mp_url":         mp_url,
             "payment_method": data.payment_method,
         }
+
+    from services.activity import log as alog
+    alog("order_created", "order", _orden_id, f"Orden #{_orden_id} — {data.nombre}",
+         detail=f"Total: ${total:,.0f} | Método: {data.payment_method}",
+         user_id=user_id, user_name=data.nombre, request=request)
+
+    return _result
 
 # ── Helper ──────────────────────────────────────────────────────────
 
@@ -369,13 +397,15 @@ class RegistroRequest(BaseModel):
 
 
 @app.post("/api/auth/login")
-async def api_login(data: LoginRequest):
+async def api_login(data: LoginRequest, request: Request):
     from services.auth import login
     from services.tokens import crear_token
     user = login(data.email, data.password)
     if not user:
         raise HTTPException(status_code=401, detail="Email o contraseña incorrectos.")
     token = crear_token(user.id, user.role.value)
+    from services.activity import log as alog
+    alog("user_login", "user", user.id, user.email, user_id=user.id, user_name=user.name, request=request)
     return {
         "id":     user.id,
         "nombre": user.name,
@@ -386,7 +416,7 @@ async def api_login(data: LoginRequest):
 
 
 @app.post("/api/auth/registro")
-async def api_registro(data: RegistroRequest):
+async def api_registro(data: RegistroRequest, request: Request):
     from services.auth import register
     try:
         user = register(
@@ -394,6 +424,8 @@ async def api_registro(data: RegistroRequest):
             email=data.email,
             password=data.password,
         )
+        from services.activity import log as alog
+        alog("user_registered", "user", user.id, user.email, user_id=user.id, user_name=user.name, request=request)
         return {
             "id":     user.id,
             "nombre": user.name,
@@ -483,6 +515,71 @@ async def admin_settings(request: Request):
 @app.get("/api/admin/settings/check")
 async def check_owner(owner=Depends(verificar_owner)):
     return {"ok": True}
+
+
+@app.get("/api/admin/activity")
+async def api_activity_log(
+    page:        int = 1,
+    page_size:   int = 50,
+    action:      str = None,
+    entity_type: str = None,
+    session_id:  str = None,
+    date_from:   str = None,
+    date_to:     str = None,
+    owner=Depends(verificar_owner),
+):
+    from db.connection import get_db
+    from db.models import ActivityLog
+    from sqlalchemy import desc
+
+    with get_db() as db:
+        q = db.query(ActivityLog)
+
+        if action:
+            q = q.filter(ActivityLog.action == action)
+        if entity_type:
+            q = q.filter(ActivityLog.entity_type == entity_type)
+        if session_id:
+            q = q.filter(ActivityLog.session_id == session_id)
+        if date_from:
+            from datetime import datetime
+            q = q.filter(ActivityLog.timestamp >= datetime.fromisoformat(date_from))
+        if date_to:
+            from datetime import datetime
+            q = q.filter(ActivityLog.timestamp <= datetime.fromisoformat(date_to + "T23:59:59"))
+
+        total = q.count()
+        rows  = q.order_by(desc(ActivityLog.timestamp)) \
+                 .offset((page - 1) * page_size) \
+                 .limit(page_size) \
+                 .all()
+
+        return {
+            "total": total,
+            "page":  page,
+            "pages": max(1, -(-total // page_size)),
+            "rows": [
+                {
+                    "id":          r.id,
+                    "timestamp":   r.timestamp.isoformat(),
+                    "session_id":  r.session_id,
+                    "user_id":     r.user_id,
+                    "user_name":   r.user_name,
+                    "action":      r.action,
+                    "entity_type": r.entity_type,
+                    "entity_id":   r.entity_id,
+                    "entity_desc": r.entity_desc,
+                    "detail":      r.detail,
+                    "country":     r.country,
+                    "city":        r.city,
+                    "device_type": r.device_type,
+                    "browser":     r.browser,
+                    "os":          r.os,
+                    "referrer":    r.referrer,
+                }
+                for r in rows
+            ],
+        }
 
 # ── API usuarios ───────────────────────────────────────────────────
 
@@ -607,10 +704,14 @@ async def api_admin_ordenes(
 async def api_update_orden_status(
     orden_id: int,
     body: dict,
+    request: Request,
     admin=Depends(verificar_admin)
 ):
     from services.orders import update_order_status
+    from services.activity import log as alog
     orden = update_order_status(orden_id, body["status"])
+    alog("order_status_changed", "order", orden_id, f"Orden #{orden_id}",
+         detail=f"→ {body['status']}", user_id=int(admin.get("sub", 0)), request=request)
     return {"ok": True, "status": orden.status.value}
 
 
@@ -726,6 +827,7 @@ async def api_actualizar_imagenes(
 async def api_actualizar_producto(
     product_id: int,
     body: dict,
+    request: Request,
     admin=Depends(verificar_admin)
 ):
 
@@ -762,12 +864,17 @@ async def api_actualizar_producto(
             product.technique = TechniqueType(body["technique"]) if body["technique"] else None
         if "category_id" in body and body["category_id"]:
             product.category_id = int(body["category_id"])
+        nombre_producto = product.name
 
+    from services.activity import log as alog
+    alog("product_updated", "product", product_id, nombre_producto,
+         user_id=int(admin.get("sub", 0)), request=request)
     return {"ok": True}
 
 @app.delete("/api/admin/productos/{product_id}")
 async def api_borrar_producto(
     product_id: int,
+    request: Request,
     admin=Depends(verificar_admin)
 ):
     from db.connection import get_db
@@ -790,12 +897,13 @@ async def api_borrar_producto(
                 detail=f"No se puede borrar '{product.name}' porque tiene pedidos asociados."
             )
 
-        # Borrar imágenes del storage
+        nombre_producto = product.name
         delete_product_images(product_id)
-
-        # Borrar producto
         db.delete(product)
 
+    from services.activity import log as alog
+    alog("product_deleted", "product", product_id, nombre_producto,
+         user_id=int(admin.get("sub", 0)), request=request)
     return {"ok": True}
 
 
@@ -838,6 +946,9 @@ async def subir_comprobante(orden_id: int, request: Request):
         orden.comprobante_url = result["url"]
         orden.status = OrderStatus.verifying
 
+    from services.activity import log as alog
+    alog("comprobante_uploaded", "order", orden_id, f"Orden #{orden_id}",
+         user_name="cliente")
     return {"ok": True, "url": result["url"]}
 
 
@@ -858,12 +969,40 @@ async def pago_exitoso(request: Request):
 
 @app.get("/pago/fallido", response_class=HTMLResponse)
 async def pago_fallido(request: Request):
-    return templates.TemplateResponse("pago_fallido.html", {"request": request})
+    from services.activity import log as alog
+    order_id = request.query_params.get("external_reference")
+    pref_id  = request.query_params.get("preference_id", "")
+    alog("payment_mp_failed", "order",
+         int(order_id) if order_id else None,
+         f"Orden #{order_id}" if order_id else "desconocida",
+         detail=f"preference_id: {pref_id}",
+         request=request)
+    return templates.TemplateResponse("pago_fallido.html", {"request": request, "is_production": IS_PRODUCTION})
 
 
 @app.get("/pago/pendiente", response_class=HTMLResponse)
 async def pago_pendiente(request: Request):
-    return templates.TemplateResponse("pago_pendiente.html", {"request": request})
+    from services.activity import log as alog
+    order_id = request.query_params.get("external_reference")
+    alog("payment_mp_pending", "order",
+         int(order_id) if order_id else None,
+         f"Orden #{order_id}" if order_id else "desconocida",
+         request=request)
+    return templates.TemplateResponse("pago_pendiente.html", {"request": request, "is_production": IS_PRODUCTION})
+
+
+# ── Session tracking ──────────────────────────────────────────────
+
+@app.post("/api/session/start")
+async def session_start(request: Request):
+    from services.activity import log as alog
+    body       = await request.json()
+    session_id = body.get("session_id")
+    entry_page = body.get("entry_page", "")
+    referrer   = body.get("referrer", "")
+    alog("session_start", detail=f"entry: {entry_page} | ref: {referrer}",
+         session_id=session_id, request=request)
+    return {"ok": True}
 
 
 # ── Webhook MercadoPago ────────────────────────────────────────────
@@ -885,9 +1024,19 @@ async def webhook_mp(request: Request):
     if not resultado:
         return {"ok": True}
 
+    from services.activity import log as alog
     if resultado["status"] == "approved" and resultado["order_id"]:
         update_order_status(resultado["order_id"], "paid")
         print(f"✅ Orden {resultado['order_id']} marcada como pagada")
+        alog("payment_mp_approved", "order", resultado["order_id"],
+             f"Orden #{resultado['order_id']}",
+             detail=f"Payment ID: {resultado['payment_id']} | ${resultado['amount']:,.0f}",
+             user_name="mercadopago")
+    elif resultado["status"] in ("rejected", "cancelled") and resultado["order_id"]:
+        alog("payment_mp_rejected", "order", resultado["order_id"],
+             f"Orden #{resultado['order_id']}",
+             detail=f"status: {resultado['status']} | Payment ID: {resultado['payment_id']}",
+             user_name="mercadopago")
 
     return {"ok": True}
 

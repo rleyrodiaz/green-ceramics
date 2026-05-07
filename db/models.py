@@ -166,6 +166,34 @@ class Order(Base):
     )
 
 
+class ActivityLog(Base):
+    __tablename__ = "activity_logs"
+
+    id          : Mapped[int]      = mapped_column(Integer, primary_key=True)
+    timestamp   : Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    session_id  : Mapped[str]      = mapped_column(String(36),  nullable=True)
+    user_id     : Mapped[int]      = mapped_column(Integer,     nullable=True)
+    user_name   : Mapped[str]      = mapped_column(String(120), nullable=True)
+    action      : Mapped[str]      = mapped_column(String(60),  nullable=False)
+    entity_type : Mapped[str]      = mapped_column(String(40),  nullable=True)
+    entity_id   : Mapped[int]      = mapped_column(Integer,     nullable=True)
+    entity_desc : Mapped[str]      = mapped_column(String(200), nullable=True)
+    detail      : Mapped[str]      = mapped_column(Text,        nullable=True)
+    country     : Mapped[str]      = mapped_column(String(60),  nullable=True)
+    city        : Mapped[str]      = mapped_column(String(60),  nullable=True)
+    device_type : Mapped[str]      = mapped_column(String(20),  nullable=True)
+    browser     : Mapped[str]      = mapped_column(String(60),  nullable=True)
+    os          : Mapped[str]      = mapped_column(String(60),  nullable=True)
+    referrer    : Mapped[str]      = mapped_column(String(300), nullable=True)
+
+    __table_args__ = (
+        Index("ix_activity_timestamp",  "timestamp"),
+        Index("ix_activity_action",     "action"),
+        Index("ix_activity_session",    "session_id"),
+        Index("ix_activity_entity",     "entity_type", "entity_id"),
+    )
+
+
 class OrderItem(Base):
     __tablename__ = "order_items"
 

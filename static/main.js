@@ -160,8 +160,32 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+// ── Session tracking ──────────────────────────────────────────────
+function getSessionId() {
+    let sid = sessionStorage.getItem("session_id");
+    if (!sid) {
+        sid = crypto.randomUUID();
+        sessionStorage.setItem("session_id", sid);
+        // Nueva sesión: notificar al backend
+        fetch("/api/session/start", {
+            method:  "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                session_id: sid,
+                entry_page: window.location.pathname,
+                referrer:   document.referrer || "",
+            }),
+        }).catch(() => {});
+    }
+    return sid;
+}
+
+// Exponer para que otros scripts lo usen
+window.getSessionId = getSessionId;
+
 // ── Init ──────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
+    getSessionId();
     updateCartCount();
     cargarDestacados();
     updateNavAdmin();

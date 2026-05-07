@@ -35,7 +35,7 @@
             <p class="admin-subtitle">Configuración técnica — solo owner</p>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-bottom:3rem">
             <div class="quick-card" style="opacity:0.5;cursor:not-allowed">
                 <p class="quick-card-title">Base de datos</p>
                 <p class="quick-card-sub">Inicializar o resetear la DB</p>
@@ -50,9 +50,84 @@
             </div>
         </div>
 
-        <p style="margin-top:2rem;color:var(--text-muted);font-size:0.85rem">
-            ✦ Funcionalidades en desarrollo
-        </p>
+        <!-- Activity Log -->
+        <div style="border-top:1px solid var(--border-light,#e8e0d8);padding-top:2rem">
+        <button class="admin-btn-sm" style="margin-bottom:1.5rem"
+                onclick="toggleLog()">Ver Activity Log</button>
+        <div id="log-section" style="display:none">
+            <h2 class="admin-title" style="font-size:1.2rem;margin-bottom:1.5rem">Activity Log</h2>
+
+            <!-- Filtros -->
+            <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;align-items:flex-end">
+                <div>
+                    <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:0.3rem">Desde</label>
+                    <input type="date" id="log-date-from" style="font-size:0.85rem;padding:0.4rem 0.75rem;border:1px solid #ddd;border-radius:2px">
+                </div>
+                <div>
+                    <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:0.3rem">Hasta</label>
+                    <input type="date" id="log-date-to" style="font-size:0.85rem;padding:0.4rem 0.75rem;border:1px solid #ddd;border-radius:2px">
+                </div>
+                <div>
+                    <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:0.3rem">Acción</label>
+                    <select id="log-action" style="font-size:0.85rem;padding:0.4rem 0.75rem;border:1px solid #ddd;border-radius:2px">
+                        <option value="">Todas</option>
+                        <option value="session_start">Inicio de sesión</option>
+                        <option value="user_login">Login</option>
+                        <option value="user_registered">Registro</option>
+                        <option value="order_created">Orden creada</option>
+                        <option value="order_status_changed">Estado de orden</option>
+                        <option value="payment_mp_approved">Pago MP aprobado</option>
+                        <option value="payment_mp_rejected">Pago MP rechazado</option>
+                        <option value="payment_mp_failed">Pago MP fallido</option>
+                        <option value="payment_mp_pending">Pago MP pendiente</option>
+                        <option value="comprobante_uploaded">Comprobante subido</option>
+                        <option value="product_updated">Producto actualizado</option>
+                        <option value="product_deleted">Producto eliminado</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:0.3rem">Entidad</label>
+                    <select id="log-entity" style="font-size:0.85rem;padding:0.4rem 0.75rem;border:1px solid #ddd;border-radius:2px">
+                        <option value="">Todas</option>
+                        <option value="order">Orden</option>
+                        <option value="product">Producto</option>
+                        <option value="user">Usuario</option>
+                        <option value="payment">Pago</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:0.3rem">Session ID</label>
+                    <input type="text" id="log-session" placeholder="uuid..."
+                           style="font-size:0.82rem;padding:0.4rem 0.75rem;border:1px solid #ddd;border-radius:2px;width:220px;font-family:monospace">
+                </div>
+                <button class="admin-btn-sm" onclick="cargarLog(1)">Filtrar</button>
+                <button class="admin-btn-sm" style="background:transparent;border:1px solid #ddd;color:var(--text-muted)" onclick="limpiarFiltros()">Limpiar</button>
+            </div>
+
+            <!-- Tabla -->
+            <div class="admin-tabla-wrapper">
+                <table class="admin-tabla" id="tabla-log">
+                    <thead>
+                        <tr>
+                            <th>Fecha / Hora</th>
+                            <th>Session ID</th>
+                            <th>Usuario</th>
+                            <th>Acción</th>
+                            <th>Entidad</th>
+                            <th>País / Dispositivo</th>
+                            <th>Detalle</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-log">
+                        <tr><td colspan="6" style="text-align:center;color:var(--text-muted)">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            <div id="log-paginacion" style="display:flex;gap:0.5rem;align-items:center;margin-top:1rem;flex-wrap:wrap"></div>
+        </div><!-- cierra log-section -->
+        </div><!-- cierra activity log wrapper -->
     </main>
 
     <!-- <script src="/static/admin.js"></script>
@@ -64,20 +139,113 @@
     <script src="/static/admin.js"></script>
     <script>
         verificarAdmin();
+        document.addEventListener("DOMContentLoaded", () => {
+            updateSettingsLink();
+        });
 
-        async function verificarOwner() {
-            const token = localStorage.getItem("admin_token");
-            const res = await fetch("/api/admin/settings/check", {
-                headers: { "Authorization": `Bearer ${token}` }
-            });
-            if (!res.ok) {
-                alert("Esta sección es solo para el owner.");
-                window.location = "/admin/dashboard";
+        function toggleLog() {
+            const sec = document.getElementById("log-section");
+            const btn = event.target;
+            if (sec.style.display === "none") {
+                sec.style.display = "block";
+                btn.textContent = "Ocultar Activity Log";
+                cargarLog(1);
+            } else {
+                sec.style.display = "none";
+                btn.textContent = "Ver Activity Log";
             }
         }
 
-        verificarAdmin();
-        document.addEventListener("DOMContentLoaded", updateSettingsLink);
+        const actionLabel = {
+            session_start:        "Inicio de sesión",
+            order_created:        "Orden creada",
+            order_status_changed: "Estado cambiado",
+            payment_mp_approved:  "Pago MP aprobado",
+            payment_mp_rejected:  "Pago MP rechazado",
+            payment_mp_failed:    "Pago MP fallido",
+            payment_mp_pending:   "Pago MP pendiente",
+            comprobante_uploaded: "Comprobante subido",
+            product_updated:      "Producto actualizado",
+            product_deleted:      "Producto eliminado",
+            user_login:           "Login",
+            user_registered:      "Registro",
+        };
+
+        async function cargarLog(page) {
+            const params = new URLSearchParams({ page, page_size: 50 });
+            const action      = document.getElementById("log-action").value;
+            const entity_type = document.getElementById("log-entity").value;
+            const session_id  = document.getElementById("log-session").value.trim();
+            const date_from   = document.getElementById("log-date-from").value;
+            const date_to     = document.getElementById("log-date-to").value;
+            if (action)      params.set("action", action);
+            if (entity_type) params.set("entity_type", entity_type);
+            if (session_id)  params.set("session_id", session_id);
+            if (date_from)   params.set("date_from", date_from);
+            if (date_to)     params.set("date_to", date_to);
+
+            const data = await apiAdmin(`/api/admin/activity?${params}`);
+            if (!data) return;
+
+            const tbody = document.getElementById("tbody-log");
+            if (data.rows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-muted)">Sin registros.</td></tr>`;
+            } else {
+                tbody.innerHTML = data.rows.map(r => {
+                    const dt = new Date(r.timestamp);
+                    const fecha = dt.toLocaleDateString("es-AR") + " " +
+                                  dt.toLocaleTimeString("es-AR", {hour:"2-digit", minute:"2-digit"});
+                    const geo    = [r.country, r.city].filter(Boolean).join(" / ") || "—";
+                    const device = [r.device_type, r.browser, r.os].filter(Boolean).join(" · ") || "—";
+                    const sidShort = r.session_id ? r.session_id.substring(0, 8) + "…" : "—";
+                    return `
+                    <tr>
+                        <td style="font-size:0.8rem;white-space:nowrap">${fecha}</td>
+                        <td style="font-size:0.75rem;font-family:monospace;cursor:pointer;color:var(--clay)"
+                            title="${r.session_id || ''}"
+                            onclick="document.getElementById('log-session').value='${r.session_id || ''}';cargarLog(1)">
+                            ${sidShort}
+                        </td>
+                        <td style="font-size:0.82rem">${r.user_name || "anónimo"}</td>
+                        <td><span class="admin-badge badge-${r.action.split("_")[0]}" style="font-size:0.75rem">
+                            ${actionLabel[r.action] || r.action}
+                        </span></td>
+                        <td style="font-size:0.82rem">${r.entity_desc || "—"}</td>
+                        <td style="font-size:0.78rem;color:var(--text-muted)">${geo}<br><span style="font-size:0.72rem">${device}</span></td>
+                        <td style="font-size:0.8rem;color:var(--text-muted)">${r.detail || "—"}</td>
+                    </tr>`;
+                }).join("");
+            }
+
+            // Paginación
+            const pag = document.getElementById("log-paginacion");
+            pag.innerHTML = "";
+            if (data.pages > 1) {
+                for (let i = 1; i <= data.pages; i++) {
+                    const btn = document.createElement("button");
+                    btn.textContent = i;
+                    btn.className = "admin-btn-sm";
+                    btn.style.cssText = i === page
+                        ? "background:var(--clay);color:#fff"
+                        : "background:transparent;border:1px solid #ddd;color:var(--text-muted)";
+                    btn.onclick = () => cargarLog(i);
+                    pag.appendChild(btn);
+                }
+                const info = document.createElement("span");
+                info.style.cssText = "font-size:0.8rem;color:var(--text-muted);margin-left:0.5rem";
+                info.textContent = `${data.total} registros`;
+                pag.appendChild(info);
+            }
+        }
+
+        function limpiarFiltros() {
+            document.getElementById("log-action").value    = "";
+            document.getElementById("log-entity").value    = "";
+            document.getElementById("log-session").value   = "";
+            document.getElementById("log-date-from").value = "";
+            document.getElementById("log-date-to").value   = "";
+            cargarLog(1);
+        }
 
         lucide.createIcons();
     </script>

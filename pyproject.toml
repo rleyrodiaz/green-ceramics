@@ -19,6 +19,7 @@ uvicorn = "^0.29"
 python-jose = {extras = ["cryptography"], version = "^3.3"}
 resend = "^2.0"
 python-multipart = "^0.0.26"
+user-agents = "^2.2"
 
 
 [tool.poetry.group.dev.dependencies]

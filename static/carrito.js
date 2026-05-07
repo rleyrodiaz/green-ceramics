@@ -189,7 +189,10 @@ async function confirmarPedido() {
     try {
         const res = await fetch("/api/ordenes", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "X-Session-ID": window.getSessionId ? window.getSessionId() : "",
+            },
             body: JSON.stringify({
                 nombre: name,
                 email,

@@ -1,3 +1,23 @@
+// ── Session ID ────────────────────────────────────────────────────
+function getSessionId() {
+    let sid = sessionStorage.getItem("session_id");
+    if (!sid) {
+        sid = crypto.randomUUID();
+        sessionStorage.setItem("session_id", sid);
+        fetch("/api/session/start", {
+            method:  "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                session_id: sid,
+                entry_page: window.location.pathname,
+                referrer:   document.referrer || "",
+            }),
+        }).catch(() => {});
+    }
+    return sid;
+}
+window.getSessionId = getSessionId;
+
 // ── Auth admin ────────────────────────────────────────────────────
 function verificarAdmin() {
     const token = localStorage.getItem("admin_token");
@@ -19,10 +39,12 @@ async function apiAdmin(url, method = "GET", body = null) {
     const token = localStorage.getItem("admin_token");
     if (!token) { window.location = "/admin"; return null; }
 
+    const sid  = window.getSessionId ? window.getSessionId() : "";
     const opts = {
         method,
         headers: {
             "Authorization": `Bearer ${token}`,
+            "X-Session-ID":  sid,
             ...(body ? { "Content-Type": "application/json" } : {}),
         },
         ...(body ? { body: JSON.stringify(body) } : {}),
