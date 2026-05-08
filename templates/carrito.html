@@ -90,24 +90,62 @@
                 <label>Teléfono</label>
                 <input type="tel" id="sh-phone" placeholder="+54 11 1234-5678" />
             </div>
-            <div class="form-group">
-                <label>Dirección</label>
-                <input type="text" id="sh-address" placeholder="Av. Corrientes 1234, Piso 2" />
+
+            <!-- Tipo de envío -->
+            <div class="form-group" style="margin-bottom:1.25rem">
+                <label style="margin-bottom:0.75rem;display:block">Tipo de envío</label>
+                <input type="radio" name="shipping_method" value="domicilio" checked id="sm-domicilio" style="display:none">
+                <input type="radio" name="shipping_method" value="sucursal" id="sm-sucursal" style="display:none">
+                <div style="display:flex;gap:0.75rem">
+                    <div id="sm-domicilio-box" onclick="selectShipping('domicilio')"
+                         style="flex:1;cursor:pointer;border:2px solid #c4875a;background:#fdf6f0;padding:0.9rem;text-align:center;border-radius:2px;font-size:0.85rem">
+                        Envío a domicilio
+                    </div>
+                    <div id="sm-sucursal-box" onclick="selectShipping('sucursal')"
+                         style="flex:1;cursor:pointer;border:2px solid #ddd;background:#fff;padding:0.9rem;text-align:center;border-radius:2px;font-size:0.85rem">
+                        Retiro en sucursal
+                    </div>
+                </div>
+                <p id="sh-costo-envio" style="font-size:0.82rem;color:var(--text-muted);margin-top:0.5rem;text-align:right"></p>
             </div>
-            <div class="form-row">
+
+            <!-- Campos domicilio -->
+            <div id="sh-fields-domicilio">
                 <div class="form-group">
-                    <label>Ciudad</label>
-                    <input type="text" id="sh-city" placeholder="Buenos Aires" />
+                    <label>Dirección</label>
+                    <input type="text" id="sh-address" placeholder="Av. Corrientes 1234, Piso 2" />
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ciudad</label>
+                        <input type="text" id="sh-city" placeholder="Buenos Aires" />
+                    </div>
+                    <div class="form-group">
+                        <label>Provincia</label>
+                        <input type="text" id="sh-province" placeholder="CABA" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Código postal</label>
+                    <input type="text" id="sh-zip" placeholder="1043" />
+                </div>
+            </div>
+
+            <!-- Campos sucursal -->
+            <div id="sh-fields-sucursal" style="display:none">
+                <div class="form-group">
+                    <label>Sucursal de Correo Argentino</label>
+                    <input type="text" id="sh-branch" placeholder="Ej: Sucursal Palermo, Buenos Aires" />
+                    <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.3rem">
+                        Ingresá el nombre o dirección de la sucursal donde querés retirar.
+                    </p>
                 </div>
                 <div class="form-group">
                     <label>Provincia</label>
-                    <input type="text" id="sh-province" placeholder="CABA" />
+                    <input type="text" id="sh-province-s" placeholder="Buenos Aires" />
                 </div>
             </div>
-            <div class="form-group">
-                <label>Código postal</label>
-                <input type="text" id="sh-zip" placeholder="1043" />
-            </div>
+
             <div class="form-group">
                 <label>Notas (opcional)</label>
                 <textarea id="sh-notes" placeholder="Instrucciones especiales..."></textarea>

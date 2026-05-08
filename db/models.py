@@ -32,6 +32,12 @@ class PaymentMethod(str, enum.Enum):
     transfer = "transfer"
 
 
+class ShippingMethod(str, enum.Enum):
+    domicilio = "domicilio"
+    sucursal  = "sucursal"
+    personal  = "personal"
+
+
 class TechniqueType(str, enum.Enum):
     # torno       = "torno"
     rollos      = "rollos"
@@ -139,6 +145,11 @@ class Order(Base):
     shipping_province: Mapped[str]        = mapped_column(String(80), nullable=True)
     shipping_zip    : Mapped[str]         = mapped_column(String(20), nullable=True)
     shipping_phone  : Mapped[str]         = mapped_column(String(30), nullable=True)
+
+    # Envío
+    shipping_method : Mapped[ShippingMethod] = mapped_column(PgEnum(ShippingMethod), nullable=True)
+    shipping_branch : Mapped[str]            = mapped_column(String(200), nullable=True)
+    tracking_number : Mapped[str]            = mapped_column(String(100), nullable=True)
 
     # Pago
     payment_method  : Mapped[PaymentMethod] = mapped_column(PgEnum(PaymentMethod), default=PaymentMethod.mp, nullable=True)

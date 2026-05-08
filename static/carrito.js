@@ -113,19 +113,7 @@ function eliminarItem(id) {
 
 // ── Checkout modal ────────────────────────────────────────────────
 function abrirCheckout() {
-    const cart = getCart();
-    const items = Object.values(cart);
-    const subtotal = items.reduce((sum, i) => sum + i.precio * i.quantity, 0);
-    // const envio = subtotal >= 50000 ? 0 : 3500;
-    const envio = 0;
-    const total = subtotal + envio;
-    const fmt = n => `$${n.toLocaleString("es-AR")}`;
-
-    document.getElementById("modal-resumen").innerHTML = `
-        <div class="resumen-linea"><span>Subtotal</span><span>${fmt(subtotal)}</span></div>
-        <div class="resumen-linea"><span>Envío</span><span>${envio === 0 ? "Gratis" : fmt(envio)}</span></div>
-        <div class="resumen-linea resumen-total"><span>Total</span><span>${fmt(total)}</span></div>
-    `;
+    cargarCostosEnvio().then(() => actualizarResumen());
 
     document.getElementById("checkout-success").style.display = "none";
     document.getElementById("checkout-error").style.display = "none";
@@ -144,6 +132,64 @@ function cerrarModal() {
 document.getElementById("modal-overlay").addEventListener("click", e => {
     if (e.target === document.getElementById("modal-overlay")) cerrarModal();
 });
+
+// ── Envío ─────────────────────────────────────────────────────────
+let shippingCosts = { domicilio: 5000, sucursal: 3500, free_threshold: 50000 };
+
+async function cargarCostosEnvio() {
+    try {
+        const res = await fetch("/api/envio/costos");
+        shippingCosts = await res.json();
+    } catch {}
+}
+
+function calcularEnvio(subtotal, method) {
+    if (subtotal >= shippingCosts.free_threshold) return 0;
+    return method === "sucursal" ? shippingCosts.sucursal : shippingCosts.domicilio;
+}
+
+function selectShipping(method) {
+    const active   = { border: "2px solid #c4875a", background: "#fdf6f0" };
+    const inactive = { border: "2px solid #ddd",    background: "#fff"    };
+
+    const domEl = document.getElementById("sm-domicilio-box");
+    const sucEl = document.getElementById("sm-sucursal-box");
+    const isDom = method === "domicilio";
+
+    domEl.style.border     = isDom ? active.border   : inactive.border;
+    domEl.style.background = isDom ? active.background : inactive.background;
+    sucEl.style.border     = isDom ? inactive.border  : active.border;
+    sucEl.style.background = isDom ? inactive.background : active.background;
+
+    document.getElementById(isDom ? "sm-domicilio" : "sm-sucursal").checked = true;
+    document.getElementById("sh-fields-domicilio").style.display = isDom ? "block" : "none";
+    document.getElementById("sh-fields-sucursal").style.display  = isDom ? "none"  : "block";
+
+    actualizarResumen();
+}
+
+function actualizarResumen() {
+    const cart     = getCart();
+    const items    = Object.values(cart);
+    const subtotal = items.reduce((s, i) => s + i.precio * i.quantity, 0);
+    const method   = document.querySelector("input[name='shipping_method']:checked")?.value || "domicilio";
+    const envio    = calcularEnvio(subtotal, method);
+    const total    = subtotal + envio;
+    const fmt      = n => `$${n.toLocaleString("es-AR")}`;
+
+    document.getElementById("modal-resumen").innerHTML = `
+        <div class="resumen-linea"><span>Subtotal</span><span>${fmt(subtotal)}</span></div>
+        <div class="resumen-linea"><span>Envío</span><span>${envio === 0 ? "Gratis" : fmt(envio)}</span></div>
+        <div class="resumen-linea resumen-total"><span>Total</span><span>${fmt(total)}</span></div>
+    `;
+
+    const costoEl = document.getElementById("sh-costo-envio");
+    if (costoEl) {
+        costoEl.textContent = envio === 0
+            ? "✓ Envío gratis"
+            : `Costo de envío: ${fmt(envio)}`;
+    }
+}
 
 // ── Método de pago ────────────────────────────────────────────────
 function selectPayment(method) {
@@ -164,17 +210,31 @@ function selectPayment(method) {
 
 // ── Confirmar pedido ──────────────────────────────────────────────
 async function confirmarPedido() {
-    const name = document.getElementById("sh-name").value.trim();
-    const email = document.getElementById("sh-email").value.trim();
-    const phone = document.getElementById("sh-phone").value.trim();
-    const address = document.getElementById("sh-address").value.trim();
-    const city = document.getElementById("sh-city").value.trim();
-    const province = document.getElementById("sh-province").value.trim();
-    const zip = document.getElementById("sh-zip").value.trim();
-    const notes = document.getElementById("sh-notes").value.trim();
+    const name            = document.getElementById("sh-name").value.trim();
+    const email           = document.getElementById("sh-email").value.trim();
+    const phone           = document.getElementById("sh-phone").value.trim();
+    const notes           = document.getElementById("sh-notes").value.trim();
+    const shippingMethod  = document.querySelector("input[name='shipping_method']:checked").value;
+    const isDomicilio     = shippingMethod === "domicilio";
 
-    if (!name || !email || !address || !city || !province || !zip) {
-        mostrarError("Por favor completá todos los campos obligatorios.");
+    const address  = isDomicilio ? document.getElementById("sh-address").value.trim()    : "";
+    const city     = isDomicilio ? document.getElementById("sh-city").value.trim()       : "";
+    const province = isDomicilio
+        ? document.getElementById("sh-province").value.trim()
+        : document.getElementById("sh-province-s").value.trim();
+    const zip      = isDomicilio ? document.getElementById("sh-zip").value.trim()        : "";
+    const branch   = isDomicilio ? "" : document.getElementById("sh-branch").value.trim();
+
+    if (!name || !email) {
+        mostrarError("Por favor completá nombre y email.");
+        return;
+    }
+    if (isDomicilio && (!address || !city || !province || !zip)) {
+        mostrarError("Por favor completá todos los campos de dirección.");
+        return;
+    }
+    if (!isDomicilio && !branch) {
+        mostrarError("Por favor ingresá la sucursal de Correo Argentino.");
         return;
     }
 
@@ -202,7 +262,9 @@ async function confirmarPedido() {
                 provincia: province,
                 cp: zip,
                 notas: notes,
-                payment_method: document.querySelector("input[name='payment_method']:checked").value,
+                payment_method:  document.querySelector("input[name='payment_method']:checked").value,
+                shipping_method: shippingMethod,
+                shipping_branch: branch,
                 items,
             }),
         });

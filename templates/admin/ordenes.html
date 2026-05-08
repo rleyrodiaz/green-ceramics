@@ -85,6 +85,7 @@
                         <th>Ciudad</th>
                         <th>Items</th>
                         <th>Total</th>
+                        <th>Envío</th>
                         <th>Pago</th>
                         <th>Estado</th>
                         <th>Fecha</th>
@@ -161,15 +162,35 @@
                     ? `<a href="${o.comprobante_url}" target="_blank" style="font-size:0.78rem;color:var(--clay)">Ver comprobante</a>`
                     : "";
 
+                const envioLabel = {
+                    domicilio: "🚚 Domicilio",
+                    sucursal:  "📦 Sucursal",
+                    personal:  "🤝 Personal",
+                }[o.shipping_method] || "—";
+
+                const sucursalInfo = o.shipping_branch
+                    ? `<br><span style="font-size:0.75rem;color:var(--text-muted)">${o.shipping_branch}</span>`
+                    : "";
+
+                const trackingHtml = o.tracking_number
+                    ? `<span style="font-size:0.78rem;font-family:monospace">${o.tracking_number}</span><br>`
+                    : "";
+
                 return `
                     <tr>
                         <td>#${o.id}</td>
                         <td><strong>${o.nombre}</strong></td>
                         <td>${o.ciudad || "—"}</td>
-                        <td style="font-size:0.82rem;color:var(--text-muted);max-width:200px">
+                        <td style="font-size:0.82rem;color:var(--text-muted);max-width:180px">
                             ${itemsText}
                         </td>
-                        <td>$${o.total.toLocaleString("es-AR")}</td>
+                        <td>
+                            $${o.total.toLocaleString("es-AR")}
+                            ${o.shipping_cost > 0 ? `<br><span style="font-size:0.75rem;color:var(--text-muted)">envío: $${o.shipping_cost.toLocaleString("es-AR")}</span>` : ""}
+                        </td>
+                        <td style="font-size:0.82rem">
+                            ${envioLabel}${sucursalInfo}
+                        </td>
                         <td style="font-size:0.82rem">
                             ${pagoLabel}
                             ${comprobanteLink ? `<br>${comprobanteLink}` : ""}
@@ -181,12 +202,21 @@
                         </td>
                         <td style="font-size:0.82rem;color:var(--text-muted)">${fecha}</td>
                         <td>
+                            ${trackingHtml}
+                            <input type="text" id="tracking-${o.id}" value="${o.tracking_number || ''}"
+                                   placeholder="Nro. seguimiento"
+                                   style="font-size:0.78rem;padding:0.3rem 0.5rem;border:1px solid #ddd;border-radius:2px;width:120px;margin-bottom:0.3rem">
+                            <br>
                             ${next ? `
-                                <button class="admin-btn-sm"
+                                <button class="admin-btn-sm" style="margin-bottom:0.25rem"
                                         onclick="avanzarEstado(${o.id}, '${next}')">
                                     ${nextLabel[o.status]}
-                                </button>
-                            ` : "—"}
+                                </button><br>
+                            ` : ""}
+                            <button class="admin-btn-sm" style="background:transparent;border:1px solid #ddd;color:var(--text-muted);font-size:0.75rem"
+                                    onclick="guardarTracking(${o.id})">
+                                Guardar tracking
+                            </button>
                         </td>
                     </tr>
                 `;
@@ -195,6 +225,13 @@
 
         async function avanzarEstado(id, status) {
             await apiAdmin(`/api/admin/ordenes/${id}/status`, "PUT", { status });
+            const statusActual = document.querySelector(".filtro-status.active").dataset.status;
+            cargarOrdenes(statusActual);
+        }
+
+        async function guardarTracking(id) {
+            const val = document.getElementById(`tracking-${id}`).value.trim();
+            await apiAdmin(`/api/admin/ordenes/${id}/tracking`, "PUT", { tracking_number: val });
             const statusActual = document.querySelector(".filtro-status.active").dataset.status;
             cargarOrdenes(statusActual);
         }

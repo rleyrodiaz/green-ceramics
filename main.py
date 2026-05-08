@@ -83,6 +83,21 @@ async def lifespan(app: FastAPI):
             print("✅ Columna comprobante_url agregada")
         conn.execute(text("ALTER TYPE orderstatus ADD VALUE IF NOT EXISTS 'verifying' AFTER 'pending'"))
         conn.commit()
+        for col, coltype in {
+            "shipping_method":  "VARCHAR(20)",
+            "shipping_branch":  "VARCHAR(200)",
+            "tracking_number":  "VARCHAR(100)",
+        }.items():
+            if col not in cols:
+                conn.execute(text(f"ALTER TABLE orders ADD COLUMN IF NOT EXISTS {col} {coltype}"))
+                conn.commit()
+                print(f"✅ Columna orders.{col} agregada")
+        conn.execute(text("ALTER TYPE shippingmethod ADD VALUE IF NOT EXISTS 'domicilio'"))
+        conn.commit()
+        conn.execute(text("ALTER TYPE shippingmethod ADD VALUE IF NOT EXISTS 'sucursal'"))
+        conn.commit()
+        conn.execute(text("ALTER TYPE shippingmethod ADD VALUE IF NOT EXISTS 'personal'"))
+        conn.commit()
 
     # Crear tabla activity_logs si no existe + nuevas columnas
     import db.models  # noqa
@@ -236,16 +251,18 @@ class ItemOrden(BaseModel):
     nombre:      str
 
 class OrdenRequest(BaseModel):
-    nombre:         str
-    email:          str
-    telefono:       str = ""
-    direccion:      str
-    ciudad:         str
-    provincia:      str
-    cp:             str
-    notas:          str = ""
-    payment_method: str = "mp"
-    items:          list[ItemOrden]
+    nombre:          str
+    email:           str
+    telefono:        str = ""
+    direccion:       str = ""
+    ciudad:          str = ""
+    provincia:       str = ""
+    cp:              str = ""
+    notas:           str = ""
+    payment_method:  str = "mp"
+    shipping_method: str = "domicilio"
+    shipping_branch: str = ""
+    items:           list[ItemOrden]
 
 
 @app.post("/api/ordenes")
@@ -278,16 +295,27 @@ async def crear_orden(data: OrdenRequest, request: Request):
 
     # Crear orden
     with get_db() as db:
-        from db.models import Order, OrderItem, OrderStatus, Product
+        from db.models import Order, OrderItem, OrderStatus, Product, ShippingMethod
+        from config.settings import SHIPPING_DOMICILIO, SHIPPING_SUCURSAL, SHIPPING_FREE_THRESHOLD
+
         subtotal = sum(i.precio * i.cantidad for i in data.items)
-        envio    = 0 ### if subtotal >= 50000 else 3500
-        total    = subtotal + envio
+
+        if subtotal >= SHIPPING_FREE_THRESHOLD:
+            envio = 0
+        elif data.shipping_method == "sucursal":
+            envio = SHIPPING_SUCURSAL
+        else:
+            envio = SHIPPING_DOMICILIO
+
+        total = subtotal + envio
 
         from db.models import PaymentMethod
         orden = Order(
             user_id           = user_id,
             status            = OrderStatus.pending,
             payment_method    = PaymentMethod(data.payment_method),
+            shipping_method   = ShippingMethod(data.shipping_method),
+            shipping_branch   = data.shipping_branch or None,
             subtotal          = Decimal(str(subtotal)),
             shipping_cost     = Decimal(str(envio)),
             total             = Decimal(str(total)),
@@ -446,8 +474,12 @@ async def api_ordenes_usuario(user_id: int, request: Request):
             "status":         o.status.value,
             "total":          float(o.total),
             "created_at":     o.created_at.isoformat(),
-            "payment_method": o.payment_method.value if o.payment_method else "mp",
+            "payment_method":  o.payment_method.value  if o.payment_method  else "mp",
             "comprobante_url": o.comprobante_url,
+            "shipping_method": o.shipping_method.value if o.shipping_method else "domicilio",
+            "shipping_branch": o.shipping_branch,
+            "tracking_number": o.tracking_number,
+            "shipping_cost":   float(o.shipping_cost) if o.shipping_cost else 0,
             "items": [
                 {
                     "product_name": i.product_name,
@@ -458,7 +490,7 @@ async def api_ordenes_usuario(user_id: int, request: Request):
             ],
         }
         for o in orders
-    ]    
+    ]
 
 from fastapi import Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -685,8 +717,13 @@ async def api_admin_ordenes(
             "email":          "",
             "ciudad":         o.shipping_city,
             "created_at":     o.created_at.isoformat(),
-            "payment_method": o.payment_method.value if o.payment_method else "mp",
+            "payment_method":  o.payment_method.value  if o.payment_method  else "mp",
             "comprobante_url": o.comprobante_url,
+            "shipping_method": o.shipping_method.value if o.shipping_method else "domicilio",
+            "shipping_branch": o.shipping_branch,
+            "tracking_number": o.tracking_number,
+            "shipping_cost":   float(o.shipping_cost)  if o.shipping_cost  else 0,
+            "subtotal":        float(o.subtotal),
             "items": [
                 {
                     "product_name": i.product_name,
@@ -904,6 +941,40 @@ async def api_borrar_producto(
     from services.activity import log as alog
     alog("product_deleted", "product", product_id, nombre_producto,
          user_id=int(admin.get("sub", 0)), request=request)
+    return {"ok": True}
+
+
+# ── Envío ──────────────────────────────────────────────────────────
+
+@app.get("/api/envio/costos")
+async def api_envio_costos():
+    from config.settings import SHIPPING_DOMICILIO, SHIPPING_SUCURSAL, SHIPPING_FREE_THRESHOLD
+    return {
+        "domicilio":       SHIPPING_DOMICILIO,
+        "sucursal":        SHIPPING_SUCURSAL,
+        "free_threshold":  SHIPPING_FREE_THRESHOLD,
+    }
+
+
+@app.put("/api/admin/ordenes/{orden_id}/tracking")
+async def api_update_tracking(
+    orden_id: int,
+    body: dict,
+    request: Request,
+    admin=Depends(verificar_admin)
+):
+    from db.connection import get_db
+    from db.models import Order
+    from services.activity import log as alog
+
+    with get_db() as db:
+        orden = db.query(Order).filter(Order.id == orden_id).first()
+        if not orden:
+            raise HTTPException(status_code=404, detail="Orden no encontrada.")
+        orden.tracking_number = body.get("tracking_number", "")
+
+    alog("tracking_updated", "order", orden_id, f"Orden #{orden_id}",
+         detail=body.get("tracking_number", ""), user_id=int(admin.get("sub", 0)), request=request)
     return {"ok": True}
 
 

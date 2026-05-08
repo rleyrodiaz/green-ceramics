@@ -163,10 +163,16 @@ async function cargarPedidos(userId) {
             pending:   "⏳ Pendiente de pago",
             verifying: "🔍 Comprobante en revisión",
             paid:      "✅ Pagado",
-            preparing: "🔨 Preparando",
+            preparing: "🔨 En preparación",
             shipped:   "🚚 Enviado",
             delivered: "📦 Entregado",
             cancelled: "❌ Cancelado",
+        };
+
+        const shippingLabel = {
+            domicilio: "Envío a domicilio",
+            sucursal:  "Retiro en sucursal",
+            personal:  "Entrega personal",
         };
 
         lista.innerHTML = pedidos.map(p => {
@@ -197,6 +203,12 @@ async function cargarPedidos(userId) {
                 </div>
                 <div class="pedido-total">
                     Total: $${p.total.toLocaleString("es-AR")}
+                    ${p.shipping_cost > 0 ? `<span style="font-size:0.78rem;color:var(--text-muted);margin-left:0.5rem">(envío: $${p.shipping_cost.toLocaleString("es-AR")})</span>` : ""}
+                </div>
+                <div style="font-size:0.82rem;color:var(--text-muted);margin-top:0.4rem">
+                    ${shippingLabel[p.shipping_method] || ""}
+                    ${p.shipping_branch ? ` — ${p.shipping_branch}` : ""}
+                    ${p.tracking_number ? `<br>Seguimiento: <strong>${p.tracking_number}</strong>` : ""}
                 </div>
                 ${puedeSubir ? `
                 <div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--border-light,#eee)">
