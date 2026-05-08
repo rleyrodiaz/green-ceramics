@@ -172,9 +172,15 @@
                     ? `<br><span style="font-size:0.75rem;color:var(--text-muted)">${o.shipping_branch}</span>`
                     : "";
 
-                const trackingHtml = o.tracking_number
-                    ? `<span style="font-size:0.78rem;font-family:monospace">${o.tracking_number}</span><br>`
-                    : "";
+                const trackingEditable = ["paid","preparing","shipped","delivered"].includes(o.status);
+                const facturaEditable  = ["shipped","delivered"].includes(o.status);
+
+                const disabledStyle   = "background:#f5f5f5;color:#bbb;cursor:not-allowed;";
+                const enabledStyle    = "background:#fff;color:inherit;cursor:text;";
+                const trackingStyle   = `font-size:0.78rem;padding:0.3rem 0.5rem;border:1px solid #ddd;border-radius:2px;width:130px;margin-bottom:0.2rem;${trackingEditable ? enabledStyle : disabledStyle}`;
+                const facturaStyle    = `font-size:0.78rem;padding:0.3rem 0.5rem;border:1px solid #ddd;border-radius:2px;width:130px;margin-bottom:0.2rem;${facturaEditable  ? enabledStyle : disabledStyle}`;
+                const btnDisabled     = `background:transparent;border:1px solid #eee;color:#ccc;font-size:0.75rem;cursor:not-allowed;`;
+                const btnEnabled      = `background:transparent;border:1px solid #ddd;color:var(--text-muted);font-size:0.75rem;`;
 
                 return `
                     <tr>
@@ -202,21 +208,25 @@
                         </td>
                         <td style="font-size:0.82rem;color:var(--text-muted)">${fecha}</td>
                         <td>
-                            ${trackingHtml}
-                            <input type="text" id="tracking-${o.id}" value="${o.tracking_number || ''}"
-                                   placeholder="Nro. seguimiento"
-                                   style="font-size:0.78rem;padding:0.3rem 0.5rem;border:1px solid #ddd;border-radius:2px;width:120px;margin-bottom:0.3rem">
-                            <br>
                             ${next ? `
-                                <button class="admin-btn-sm" style="margin-bottom:0.25rem"
+                                <button class="admin-btn-sm" style="margin-bottom:0.4rem;display:block"
                                         onclick="avanzarEstado(${o.id}, '${next}')">
                                     ${nextLabel[o.status]}
-                                </button><br>
+                                </button>
                             ` : ""}
-                            <button class="admin-btn-sm" style="background:transparent;border:1px solid #ddd;color:var(--text-muted);font-size:0.75rem"
-                                    onclick="guardarTracking(${o.id})">
-                                Guardar tracking
-                            </button>
+                            <input type="text" id="tracking-${o.id}" value="${o.tracking_number || ''}"
+                                   placeholder="Nro. seguimiento CA"
+                                   style="${trackingStyle}"
+                                   ${trackingEditable ? "" : "disabled"}>
+                            <button class="admin-btn-sm" style="${trackingEditable ? btnEnabled : btnDisabled}"
+                                    ${trackingEditable ? `onclick="guardarTracking(${o.id})"` : "disabled"}>✓</button>
+                            <br>
+                            <input type="text" id="factura-${o.id}" value="${o.factura_numero || ''}"
+                                   placeholder="Nro. factura AFIP"
+                                   style="${facturaStyle}"
+                                   ${facturaEditable ? "" : "disabled"}>
+                            <button class="admin-btn-sm" style="${facturaEditable ? btnEnabled : btnDisabled}"
+                                    ${facturaEditable ? `onclick="guardarFactura(${o.id})"` : "disabled"}>✓</button>
                         </td>
                     </tr>
                 `;
@@ -232,6 +242,13 @@
         async function guardarTracking(id) {
             const val = document.getElementById(`tracking-${id}`).value.trim();
             await apiAdmin(`/api/admin/ordenes/${id}/tracking`, "PUT", { tracking_number: val });
+            const statusActual = document.querySelector(".filtro-status.active").dataset.status;
+            cargarOrdenes(statusActual);
+        }
+
+        async function guardarFactura(id) {
+            const val = document.getElementById(`factura-${id}`).value.trim();
+            await apiAdmin(`/api/admin/ordenes/${id}/factura`, "PUT", { factura_numero: val });
             const statusActual = document.querySelector(".filtro-status.active").dataset.status;
             cargarOrdenes(statusActual);
         }

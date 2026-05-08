@@ -150,6 +150,8 @@ class Order(Base):
     shipping_method : Mapped[ShippingMethod] = mapped_column(PgEnum(ShippingMethod), nullable=True)
     shipping_branch : Mapped[str]            = mapped_column(String(200), nullable=True)
     tracking_number : Mapped[str]            = mapped_column(String(100), nullable=True)
+    factura_numero  : Mapped[str]            = mapped_column(String(50),  nullable=True)
+    factura_fecha   : Mapped[datetime]       = mapped_column(DateTime,    nullable=True)
 
     # Pago
     payment_method  : Mapped[PaymentMethod] = mapped_column(PgEnum(PaymentMethod), default=PaymentMethod.mp, nullable=True)

@@ -208,7 +208,8 @@ async function cargarPedidos(userId) {
                 <div style="font-size:0.82rem;color:var(--text-muted);margin-top:0.4rem">
                     ${shippingLabel[p.shipping_method] || ""}
                     ${p.shipping_branch ? ` — ${p.shipping_branch}` : ""}
-                    ${p.tracking_number ? `<br>Seguimiento: <strong>${p.tracking_number}</strong>` : ""}
+                    ${p.tracking_number ? `<br>Seguimiento CA: <strong>${p.tracking_number}</strong>` : ""}
+                    ${p.factura_numero  ? `<br>Factura: <strong>${p.factura_numero}</strong>` : ""}
                 </div>
                 ${puedeSubir ? `
                 <div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--border-light,#eee)">

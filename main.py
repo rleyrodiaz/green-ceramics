@@ -87,6 +87,8 @@ async def lifespan(app: FastAPI):
             "shipping_method":  "VARCHAR(20)",
             "shipping_branch":  "VARCHAR(200)",
             "tracking_number":  "VARCHAR(100)",
+            "factura_numero":   "VARCHAR(50)",
+            "factura_fecha":    "TIMESTAMP",
         }.items():
             if col not in cols:
                 conn.execute(text(f"ALTER TABLE orders ADD COLUMN IF NOT EXISTS {col} {coltype}"))
@@ -479,6 +481,7 @@ async def api_ordenes_usuario(user_id: int, request: Request):
             "shipping_method": o.shipping_method.value if o.shipping_method else "domicilio",
             "shipping_branch": o.shipping_branch,
             "tracking_number": o.tracking_number,
+            "factura_numero":  o.factura_numero,
             "shipping_cost":   float(o.shipping_cost) if o.shipping_cost else 0,
             "items": [
                 {
@@ -722,6 +725,8 @@ async def api_admin_ordenes(
             "shipping_method": o.shipping_method.value if o.shipping_method else "domicilio",
             "shipping_branch": o.shipping_branch,
             "tracking_number": o.tracking_number,
+            "factura_numero":  o.factura_numero,
+            "factura_fecha":   o.factura_fecha.isoformat() if o.factura_fecha else None,
             "shipping_cost":   float(o.shipping_cost)  if o.shipping_cost  else 0,
             "subtotal":        float(o.subtotal),
             "items": [
@@ -954,6 +959,30 @@ async def api_envio_costos():
         "sucursal":        SHIPPING_SUCURSAL,
         "free_threshold":  SHIPPING_FREE_THRESHOLD,
     }
+
+
+@app.put("/api/admin/ordenes/{orden_id}/factura")
+async def api_update_factura(
+    orden_id: int,
+    body: dict,
+    request: Request,
+    admin=Depends(verificar_admin)
+):
+    from db.connection import get_db
+    from db.models import Order
+    from services.activity import log as alog
+    from datetime import datetime
+
+    with get_db() as db:
+        orden = db.query(Order).filter(Order.id == orden_id).first()
+        if not orden:
+            raise HTTPException(status_code=404, detail="Orden no encontrada.")
+        orden.factura_numero = body.get("factura_numero", "")
+        orden.factura_fecha  = datetime.utcnow()
+
+    alog("factura_emitida", "order", orden_id, f"Orden #{orden_id}",
+         detail=body.get("factura_numero", ""), user_id=int(admin.get("sub", 0)), request=request)
+    return {"ok": True}
 
 
 @app.put("/api/admin/ordenes/{orden_id}/tracking")
