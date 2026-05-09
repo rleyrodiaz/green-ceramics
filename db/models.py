@@ -149,9 +149,13 @@ class Order(Base):
     # Envío
     shipping_method : Mapped[ShippingMethod] = mapped_column(PgEnum(ShippingMethod), nullable=True)
     shipping_branch : Mapped[str]            = mapped_column(String(200), nullable=True)
-    tracking_number : Mapped[str]            = mapped_column(String(100), nullable=True)
-    factura_numero  : Mapped[str]            = mapped_column(String(50),  nullable=True)
-    factura_fecha   : Mapped[datetime]       = mapped_column(DateTime,    nullable=True)
+    tracking_number          : Mapped[str]      = mapped_column(String(100), nullable=True)
+    factura_numero           : Mapped[str]      = mapped_column(String(50),  nullable=True)
+    factura_fecha            : Mapped[datetime] = mapped_column(DateTime,    nullable=True)
+    customer_email           : Mapped[str]      = mapped_column(String(255), nullable=True)
+    mp_checkout_at           : Mapped[datetime] = mapped_column(DateTime,    nullable=True)
+    reminder_mp_sent_at      : Mapped[datetime] = mapped_column(DateTime,    nullable=True)
+    reminder_transfer_sent_at: Mapped[datetime] = mapped_column(DateTime,    nullable=True)
 
     # Pago
     payment_method  : Mapped[PaymentMethod] = mapped_column(PgEnum(PaymentMethod), default=PaymentMethod.mp, nullable=True)

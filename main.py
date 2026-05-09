@@ -28,6 +28,9 @@
 
 
 from fastapi import FastAPI, HTTPException, Request
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
+scheduler = AsyncIOScheduler(timezone="America/Argentina/Buenos_Aires")
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
@@ -35,6 +38,53 @@ from contextlib import asynccontextmanager
 from db.connection import test_connection
 from decimal import Decimal
 import os
+
+async def enviar_recordatorios():
+    from datetime import datetime, timedelta
+    from config.settings import REMINDER_MP_HOURS, REMINDER_TRANSFER_HOURS, BANK_CBU, BANK_ALIAS, BANK_HOLDER
+    from db.connection import get_db
+    from db.models import Order, OrderStatus, PaymentMethod
+    from services.emails import enviar_recordatorio_mp, enviar_recordatorio_transfer
+
+    now = datetime.utcnow()
+    print(f"⏰ Verificando recordatorios ({now.strftime('%H:%M')})")
+
+    with get_db() as db:
+        # Recordatorio MP
+        mp_threshold = now - timedelta(hours=REMINDER_MP_HOURS)
+        mp_orders = db.query(Order).filter(
+            Order.status == OrderStatus.pending,
+            Order.payment_method == PaymentMethod.mp,
+            Order.mp_checkout_at.isnot(None),
+            Order.mp_checkout_at <= mp_threshold,
+            Order.reminder_mp_sent_at.is_(None),
+        ).all()
+        for o in mp_orders:
+            if o.customer_email:
+                ok = enviar_recordatorio_mp(o.customer_email, o.shipping_name or "", o.id, float(o.total))
+                if ok:
+                    o.reminder_mp_sent_at = now
+                    print(f"📧 Recordatorio MP → orden #{o.id}")
+
+        # Recordatorio transferencia
+        tr_threshold = now - timedelta(hours=REMINDER_TRANSFER_HOURS)
+        tr_orders = db.query(Order).filter(
+            Order.status == OrderStatus.pending,
+            Order.payment_method == PaymentMethod.transfer,
+            Order.comprobante_url.is_(None),
+            Order.created_at <= tr_threshold,
+            Order.reminder_transfer_sent_at.is_(None),
+        ).all()
+        for o in tr_orders:
+            if o.customer_email:
+                ok = enviar_recordatorio_transfer(
+                    o.customer_email, o.shipping_name or "", o.id, float(o.total),
+                    BANK_CBU, BANK_ALIAS, BANK_HOLDER,
+                )
+                if ok:
+                    o.reminder_transfer_sent_at = now
+                    print(f"📧 Recordatorio transferencia → orden #{o.id}")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -84,11 +134,15 @@ async def lifespan(app: FastAPI):
         conn.execute(text("ALTER TYPE orderstatus ADD VALUE IF NOT EXISTS 'verifying' AFTER 'pending'"))
         conn.commit()
         for col, coltype in {
-            "shipping_method":  "VARCHAR(20)",
-            "shipping_branch":  "VARCHAR(200)",
-            "tracking_number":  "VARCHAR(100)",
-            "factura_numero":   "VARCHAR(50)",
-            "factura_fecha":    "TIMESTAMP",
+            "shipping_method":           "VARCHAR(20)",
+            "shipping_branch":           "VARCHAR(200)",
+            "tracking_number":           "VARCHAR(100)",
+            "factura_numero":            "VARCHAR(50)",
+            "factura_fecha":             "TIMESTAMP",
+            "customer_email":            "VARCHAR(255)",
+            "mp_checkout_at":            "TIMESTAMP",
+            "reminder_mp_sent_at":       "TIMESTAMP",
+            "reminder_transfer_sent_at": "TIMESTAMP",
         }.items():
             if col not in cols:
                 conn.execute(text(f"ALTER TABLE orders ADD COLUMN IF NOT EXISTS {col} {coltype}"))
@@ -123,7 +177,14 @@ async def lifespan(app: FastAPI):
 
     test_connection()
     print("✅ DB lista")
+
+    scheduler.add_job(enviar_recordatorios, "interval", hours=1, id="recordatorios", replace_existing=True)
+    scheduler.start()
+    print("✅ Scheduler iniciado")
+
     yield
+
+    scheduler.shutdown()
 
 app = FastAPI(lifespan=lifespan)
 
@@ -318,6 +379,7 @@ async def crear_orden(data: OrdenRequest, request: Request):
             payment_method    = PaymentMethod(data.payment_method),
             shipping_method   = ShippingMethod(data.shipping_method),
             shipping_branch   = data.shipping_branch or None,
+            customer_email    = data.email,
             subtotal          = Decimal(str(subtotal)),
             shipping_cost     = Decimal(str(envio)),
             total             = Decimal(str(total)),
@@ -356,6 +418,7 @@ async def crear_orden(data: OrdenRequest, request: Request):
                 items_db = db.query(OrderItem).filter(OrderItem.order_id == orden.id).all()
                 preferencia = crear_preferencia(orden, items_db)
                 orden.mp_preference_id = preferencia["id"]
+                orden.mp_checkout_at   = __import__("datetime").datetime.utcnow()
                 mp_url = preferencia["init_point"]
             except Exception as e:
                 print(f"⚠️ Error MP: {e}")
@@ -455,7 +518,9 @@ async def api_registro(data: RegistroRequest, request: Request):
             password=data.password,
         )
         from services.activity import log as alog
+        from services.emails import enviar_bienvenida
         alog("user_registered", "user", user.id, user.email, user_id=user.id, user_name=user.name, request=request)
+        enviar_bienvenida(user.email, user.name)
         return {
             "id":     user.id,
             "nombre": user.name,
@@ -751,9 +816,38 @@ async def api_update_orden_status(
 ):
     from services.orders import update_order_status
     from services.activity import log as alog
+    from db.connection import get_db as _gdb
+    from db.models import Order as _O
+    from services.emails import enviar_pago_confirmado, enviar_pedido_enviado, enviar_pedido_entregado
+
     orden = update_order_status(orden_id, body["status"])
     alog("order_status_changed", "order", orden_id, f"Orden #{orden_id}",
          detail=f"→ {body['status']}", user_id=int(admin.get("sub", 0)), request=request)
+
+    try:
+        with _gdb() as db:
+            o = db.query(_O).filter(_O.id == orden_id).first()
+            if o and o.customer_email:
+                if body["status"] == "paid":
+                    enviar_pago_confirmado(
+                        o.customer_email, o.shipping_name or "", o.id,
+                        [{"nombre": i.product_name, "cantidad": i.quantity, "subtotal": float(i.subtotal)} for i in o.items],
+                        float(o.subtotal), float(o.shipping_cost), float(o.total),
+                        o.shipping_method.value if o.shipping_method else "domicilio",
+                        o.shipping_address or "", o.shipping_branch or "",
+                    )
+                elif body["status"] == "shipped":
+                    enviar_pedido_enviado(
+                        o.customer_email, o.shipping_name or "", o.id,
+                        o.shipping_method.value if o.shipping_method else "domicilio",
+                        o.shipping_address or "", o.shipping_branch or "",
+                        o.tracking_number or "",
+                    )
+                elif body["status"] == "delivered":
+                    enviar_pedido_entregado(o.customer_email, o.shipping_name or "", o.id)
+    except Exception as e:
+        print(f"⚠️ Error email status change: {e}")
+
     return {"ok": True, "status": orden.status.value}
 
 
@@ -1047,8 +1141,16 @@ async def subir_comprobante(orden_id: int, request: Request):
         orden.status = OrderStatus.verifying
 
     from services.activity import log as alog
+    from services.emails import enviar_comprobante_recibido
     alog("comprobante_uploaded", "order", orden_id, f"Orden #{orden_id}",
-         user_name="cliente")
+         user_name="cliente", request=request)
+    try:
+        with get_db() as db:
+            o = db.query(Order).filter(Order.id == orden_id).first()
+            if o and o.customer_email:
+                enviar_comprobante_recibido(o.customer_email, o.shipping_name or "", o.id, float(o.total))
+    except Exception as e:
+        print(f"⚠️ Error email comprobante: {e}")
     return {"ok": True, "url": result["url"]}
 
 
@@ -1070,6 +1172,10 @@ async def pago_exitoso(request: Request):
 @app.get("/pago/fallido", response_class=HTMLResponse)
 async def pago_fallido(request: Request):
     from services.activity import log as alog
+    from db.connection import get_db as _get_db
+    from db.models import Order as _Order
+    from services.emails import enviar_pago_fallido
+
     order_id = request.query_params.get("external_reference")
     pref_id  = request.query_params.get("preference_id", "")
     alog("payment_mp_failed", "order",
@@ -1077,6 +1183,16 @@ async def pago_fallido(request: Request):
          f"Orden #{order_id}" if order_id else "desconocida",
          detail=f"preference_id: {pref_id}",
          request=request)
+
+    if order_id:
+        try:
+            with _get_db() as db:
+                o = db.query(_Order).filter(_Order.id == int(order_id)).first()
+                if o and o.customer_email:
+                    enviar_pago_fallido(o.customer_email, o.shipping_name or "", o.id, float(o.total))
+        except Exception as e:
+            print(f"⚠️ Error email pago fallido: {e}")
+
     return templates.TemplateResponse("pago_fallido.html", {"request": request, "is_production": IS_PRODUCTION})
 
 
@@ -1132,6 +1248,22 @@ async def webhook_mp(request: Request):
              f"Orden #{resultado['order_id']}",
              detail=f"Payment ID: {resultado['payment_id']} | ${resultado['amount']:,.0f}",
              user_name="mercadopago")
+        try:
+            from db.connection import get_db as _gdb
+            from db.models import Order as _O, OrderItem as _OI
+            from services.emails import enviar_pago_confirmado
+            with _gdb() as db:
+                o = db.query(_O).filter(_O.id == resultado["order_id"]).first()
+                if o and o.customer_email:
+                    enviar_pago_confirmado(
+                        o.customer_email, o.shipping_name or "", o.id,
+                        [{"nombre": i.product_name, "cantidad": i.quantity, "subtotal": float(i.subtotal)} for i in o.items],
+                        float(o.subtotal), float(o.shipping_cost), float(o.total),
+                        o.shipping_method.value if o.shipping_method else "domicilio",
+                        o.shipping_address or "", o.shipping_branch or "",
+                    )
+        except Exception as e:
+            print(f"⚠️ Error email pago confirmado: {e}")
     elif resultado["status"] in ("rejected", "cancelled") and resultado["order_id"]:
         alog("payment_mp_rejected", "order", resultado["order_id"],
              f"Orden #{resultado['order_id']}",

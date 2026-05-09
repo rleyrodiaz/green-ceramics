@@ -277,10 +277,6 @@ async function confirmarPedido() {
 
         const orden = await res.json();
 
-        // Limpiar carrito
-        localStorage.removeItem("cart");
-        updateCartCount();
-
         document.getElementById("checkout-success").style.display = "block";
         document.getElementById("checkout-error").style.display = "none";
 

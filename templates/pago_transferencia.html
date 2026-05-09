@@ -118,6 +118,10 @@
         const ordenId  = params.get("orden_id");
         const total    = params.get("total");
 
+        // El pedido está confirmado — limpiar carrito
+        localStorage.removeItem("cart");
+        if (typeof updateCartCount === "function") updateCartCount();
+
         if (total) {
             document.getElementById("dato-total").textContent =
                 "$" + parseFloat(total).toLocaleString("es-AR");

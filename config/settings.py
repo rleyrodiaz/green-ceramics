@@ -60,6 +60,10 @@ SHIPPING_DOMICILIO       = int(os.getenv("SHIPPING_DOMICILIO", "5000"))
 SHIPPING_SUCURSAL        = int(os.getenv("SHIPPING_SUCURSAL",  "3500"))
 SHIPPING_FREE_THRESHOLD  = int(os.getenv("SHIPPING_FREE_THRESHOLD", "50000"))
 
+# Recordatorios (en horas)
+REMINDER_MP_HOURS       = float(os.getenv("REMINDER_MP_HOURS",       "24"))
+REMINDER_TRANSFER_HOURS = float(os.getenv("REMINDER_TRANSFER_HOURS", "48"))
+
 # Resend
 RESEND_API_KEY = os.getenv("RESEND_API_KEY")
 EMAIL_FROM     = os.getenv("EMAIL_FROM", "onboarding@resend.dev")
