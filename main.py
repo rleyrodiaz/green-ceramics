@@ -41,13 +41,19 @@ import os
 
 async def enviar_recordatorios():
     from datetime import datetime, timedelta
-    from config.settings import REMINDER_MP_HOURS, REMINDER_TRANSFER_HOURS, BANK_CBU, BANK_ALIAS, BANK_HOLDER
+    from services.settings_db import get_float, get_setting
     from db.connection import get_db
     from db.models import Order, OrderStatus, PaymentMethod
     from services.emails import enviar_recordatorio_mp, enviar_recordatorio_transfer
 
     now = datetime.utcnow()
     print(f"⏰ Verificando recordatorios ({now.strftime('%H:%M')})")
+
+    REMINDER_MP_HOURS       = get_float("reminders.mp_hours")
+    REMINDER_TRANSFER_HOURS = get_float("reminders.transfer_hours")
+    BANK_CBU    = get_setting("bank.cbu")
+    BANK_ALIAS  = get_setting("bank.alias")
+    BANK_HOLDER = get_setting("bank.holder")
 
     with get_db() as db:
         # Recordatorio MP
@@ -174,6 +180,28 @@ async def lifespan(app: FastAPI):
                 conn.execute(text(f"ALTER TABLE activity_logs ADD COLUMN IF NOT EXISTS {col} {coltype}"))
                 conn.commit()
                 print(f"✅ Columna activity_logs.{col} agregada")
+
+    # Seed app_settings con valores de EVs (solo si la clave no existe)
+    from services.settings_db import seed_defaults
+    from config.settings import (
+        BANK_CBU, BANK_ALIAS, BANK_HOLDER,
+        SHIPPING_DOMICILIO, SHIPPING_SUCURSAL, SHIPPING_FREE_THRESHOLD,
+        REMINDER_MP_HOURS, REMINDER_TRANSFER_HOURS,
+    )
+    import os
+    seed_defaults({
+        "shipping.domicilio":           str(SHIPPING_DOMICILIO),
+        "shipping.sucursal":            str(SHIPPING_SUCURSAL),
+        "shipping.free_threshold":      str(SHIPPING_FREE_THRESHOLD),
+        "reminders.mp_hours":           str(REMINDER_MP_HOURS),
+        "reminders.transfer_hours":     str(REMINDER_TRANSFER_HOURS),
+        "bank.cbu":                     BANK_CBU,
+        "bank.alias":                   BANK_ALIAS,
+        "bank.holder":                  BANK_HOLDER,
+        "notifications.visit_email":    "false",
+        "notifications.visit_email_to": os.getenv("EMAIL_OWNER", "rleyrodiaz@hotmail.com"),
+    })
+    print("✅ App settings OK")
 
     test_connection()
     print("✅ DB lista")
@@ -359,16 +387,19 @@ async def crear_orden(data: OrdenRequest, request: Request):
     # Crear orden
     with get_db() as db:
         from db.models import Order, OrderItem, OrderStatus, Product, ShippingMethod
-        from config.settings import SHIPPING_DOMICILIO, SHIPPING_SUCURSAL, SHIPPING_FREE_THRESHOLD
+        from services.settings_db import get_int
+        ship_domicilio      = get_int("shipping.domicilio")
+        ship_sucursal       = get_int("shipping.sucursal")
+        ship_free_threshold = get_int("shipping.free_threshold")
 
         subtotal = sum(i.precio * i.cantidad for i in data.items)
 
-        if subtotal >= SHIPPING_FREE_THRESHOLD:
+        if subtotal >= ship_free_threshold:
             envio = 0
         elif data.shipping_method == "sucursal":
-            envio = SHIPPING_SUCURSAL
+            envio = ship_sucursal
         else:
-            envio = SHIPPING_DOMICILIO
+            envio = ship_domicilio
 
         total = subtotal + envio
 
@@ -619,6 +650,19 @@ async def admin_settings(request: Request):
    
 @app.get("/api/admin/settings/check")
 async def check_owner(owner=Depends(verificar_owner)):
+    return {"ok": True}
+
+
+@app.get("/api/admin/settings/values")
+async def api_get_settings(owner=Depends(verificar_owner)):
+    from services.settings_db import get_all_settings
+    return get_all_settings()
+
+
+@app.put("/api/admin/settings/values/{key:path}")
+async def api_set_setting(key: str, body: dict, owner=Depends(verificar_owner)):
+    from services.settings_db import set_setting
+    set_setting(key, str(body.get("value", "")))
     return {"ok": True}
 
 
@@ -1052,11 +1096,11 @@ async def api_borrar_producto(
 
 @app.get("/api/envio/costos")
 async def api_envio_costos():
-    from config.settings import SHIPPING_DOMICILIO, SHIPPING_SUCURSAL, SHIPPING_FREE_THRESHOLD
+    from services.settings_db import get_int
     return {
-        "domicilio":       SHIPPING_DOMICILIO,
-        "sucursal":        SHIPPING_SUCURSAL,
-        "free_threshold":  SHIPPING_FREE_THRESHOLD,
+        "domicilio":      get_int("shipping.domicilio"),
+        "sucursal":       get_int("shipping.sucursal"),
+        "free_threshold": get_int("shipping.free_threshold"),
     }
 
 
@@ -1110,8 +1154,12 @@ async def api_update_tracking(
 
 @app.get("/api/banco")
 async def api_banco():
-    from config.settings import BANK_CBU, BANK_ALIAS, BANK_HOLDER
-    return {"cbu": BANK_CBU, "alias": BANK_ALIAS, "titular": BANK_HOLDER}
+    from services.settings_db import get_setting
+    return {
+        "cbu":     get_setting("bank.cbu"),
+        "alias":   get_setting("bank.alias"),
+        "titular": get_setting("bank.holder"),
+    }
 
 
 @app.post("/api/ordenes/{orden_id}/comprobante")
@@ -1216,13 +1264,39 @@ async def pago_pendiente(request: Request):
 
 @app.post("/api/session/start")
 async def session_start(request: Request):
-    from services.activity import log as alog
+    from services.activity import log as alog, get_geo, get_client_ip, parse_device
+    from services.settings_db import get_bool, get_setting
+    from services.emails import enviar_notificacion_visita
+
     body       = await request.json()
     session_id = body.get("session_id")
     entry_page = body.get("entry_page", "")
     referrer   = body.get("referrer", "")
+
     alog("session_start", detail=f"entry: {entry_page} | ref: {referrer}",
          session_id=session_id, request=request)
+
+    if get_bool("notifications.visit_email"):
+        try:
+            ip     = get_client_ip(request)
+            geo    = get_geo(ip)
+            device = parse_device(request.headers.get("User-Agent", ""))
+            to     = get_setting("notifications.visit_email_to")
+            if to:
+                enviar_notificacion_visita(
+                    to_email   = to,
+                    country    = geo.get("country", ""),
+                    city       = geo.get("city", ""),
+                    device     = device.get("device_type", ""),
+                    browser    = device.get("browser", ""),
+                    os         = device.get("os", ""),
+                    referrer   = referrer,
+                    entry_page = entry_page,
+                    session_id = session_id or "",
+                )
+        except Exception as e:
+            print(f"⚠️ Error email visita: {e}")
+
     return {"ok": True}
 
 

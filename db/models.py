@@ -183,6 +183,16 @@ class Order(Base):
     )
 
 
+class AppSetting(Base):
+    __tablename__ = "app_settings"
+
+    key        : Mapped[str]      = mapped_column(String(100), primary_key=True)
+    value      : Mapped[str]      = mapped_column(Text, nullable=False)
+    label      : Mapped[str]      = mapped_column(String(200), nullable=True)
+    updated_at : Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow,
+                                                   onupdate=datetime.utcnow)
+
+
 class ActivityLog(Base):
     __tablename__ = "activity_logs"
 

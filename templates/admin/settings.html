@@ -50,6 +50,18 @@
             </div>
         </div>
 
+        <!-- Configuración de negocio -->
+        <div style="border-top:1px solid var(--border-light,#e8e0d8);padding-top:2rem;margin-bottom:2rem">
+            <h2 class="admin-title" style="font-size:1.2rem;margin-bottom:1.5rem">Configuración</h2>
+            <div id="settings-form" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;max-width:700px">
+                <p style="color:var(--text-muted);font-size:0.85rem">Cargando...</p>
+            </div>
+            <button class="admin-btn-sm" style="margin-top:1.25rem" onclick="guardarSettings()">
+                Guardar cambios
+            </button>
+            <span id="settings-msg" style="font-size:0.82rem;margin-left:1rem;color:var(--sage)"></span>
+        </div>
+
         <!-- Activity Log -->
         <div style="border-top:1px solid var(--border-light,#e8e0d8);padding-top:2rem">
         <button class="admin-btn-sm" style="margin-bottom:1.5rem"
@@ -71,8 +83,8 @@
                     <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:0.3rem">Acción</label>
                     <select id="log-action" style="font-size:0.85rem;padding:0.4rem 0.75rem;border:1px solid #ddd;border-radius:2px">
                         <option value="">Todas</option>
-                        <option value="session_start">Inicio de sesión</option>
-                        <option value="user_login">Login</option>
+                        <option value="session_start">Visita al sitio</option>
+                        <option value="user_login">Login (autenticación)</option>
                         <option value="user_registered">Registro</option>
                         <option value="order_created">Orden creada</option>
                         <option value="order_status_changed">Estado de orden</option>
@@ -141,7 +153,60 @@
         verificarAdmin();
         document.addEventListener("DOMContentLoaded", () => {
             updateSettingsLink();
+            cargarSettings();
         });
+
+        async function cargarSettings() {
+            const settings = await apiAdmin("/api/admin/settings/values");
+            if (!settings) return;
+
+            const groups = {
+                "Envío": ["shipping.domicilio", "shipping.sucursal", "shipping.free_threshold"],
+                "Banco": ["bank.cbu", "bank.alias", "bank.holder"],
+                "Recordatorios": ["reminders.mp_hours", "reminders.transfer_hours"],
+                "Notificaciones": ["notifications.visit_email", "notifications.visit_email_to"],
+            };
+
+            const map = Object.fromEntries(settings.map(s => [s.key, s]));
+            let html = "";
+
+            for (const [group, keys] of Object.entries(groups)) {
+                html += `<div style="grid-column:1/-1;margin-top:0.75rem">
+                    <p style="font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;
+                               color:var(--text-muted);margin-bottom:0.75rem">${group}</p>
+                </div>`;
+                for (const key of keys) {
+                    const s = map[key] || { key, value: "", label: key };
+                    html += `
+                    <div class="form-group" style="margin-bottom:0.5rem">
+                        <label style="font-size:0.8rem">${s.label}</label>
+                        <input type="text" id="setting-${key.replace(/\./g,'-')}"
+                               value="${s.value}"
+                               style="font-size:0.85rem;padding:0.4rem 0.75rem;border:1px solid #ddd;
+                                      border-radius:2px;width:100%">
+                    </div>`;
+                }
+            }
+            document.getElementById("settings-form").innerHTML = html;
+        }
+
+        async function guardarSettings() {
+            const keys = [
+                "shipping.domicilio", "shipping.sucursal", "shipping.free_threshold",
+                "bank.cbu", "bank.alias", "bank.holder",
+                "reminders.mp_hours", "reminders.transfer_hours",
+                "notifications.visit_email", "notifications.visit_email_to",
+            ];
+            for (const key of keys) {
+                const el = document.getElementById("setting-" + key.replace(/\./g,"-"));
+                if (el) {
+                    await apiAdmin(`/api/admin/settings/values/${key}`, "PUT", { value: el.value });
+                }
+            }
+            const msg = document.getElementById("settings-msg");
+            msg.textContent = "✓ Guardado";
+            setTimeout(() => msg.textContent = "", 2500);
+        }
 
         function toggleLog() {
             const sec = document.getElementById("log-section");
@@ -157,7 +222,7 @@
         }
 
         const actionLabel = {
-            session_start:        "Inicio de sesión",
+            session_start:        "Visita al sitio",
             order_created:        "Orden creada",
             order_status_changed: "Estado cambiado",
             payment_mp_approved:  "Pago MP aprobado",

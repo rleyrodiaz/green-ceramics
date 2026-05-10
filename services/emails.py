@@ -474,6 +474,57 @@ def enviar_confirmacion_pedido(
     return _send(to_email, f"Green. — Pedido #{order_id} recibido", html)
 
 
+def enviar_notificacion_visita(
+    to_email:   str,
+    country:    str = "",
+    city:       str = "",
+    device:     str = "",
+    browser:    str = "",
+    os:         str = "",
+    referrer:   str = "",
+    entry_page: str = "",
+    session_id: str = "",
+) -> bool:
+    from datetime import datetime
+    hora = datetime.now().strftime("%d/%m/%Y %H:%M")
+    geo     = ", ".join(filter(None, [city, country])) or "—"
+    disp    = " · ".join(filter(None, [device, browser, os])) or "—"
+    ref     = referrer or "directo"
+
+    html = _wrap(f"""
+        {_eyebrow("Nueva visita")}
+        <h2 style="font-family:'Georgia',serif;font-size:1.4rem;font-weight:300;
+                   color:#3d2b1f;margin:0 0 1.5rem">Alguien entró al sitio</h2>
+        <table style="width:100%;border-collapse:collapse;font-size:0.88rem">
+            <tr>
+                <td style="padding:0.5rem 0;color:#7a6a5a;width:140px">Hora</td>
+                <td style="padding:0.5rem 0;color:#3d2b1f">{hora}</td>
+            </tr>
+            <tr style="border-top:1px solid #f0ebe3">
+                <td style="padding:0.5rem 0;color:#7a6a5a">Ubicación</td>
+                <td style="padding:0.5rem 0;color:#3d2b1f">{geo}</td>
+            </tr>
+            <tr style="border-top:1px solid #f0ebe3">
+                <td style="padding:0.5rem 0;color:#7a6a5a">Dispositivo</td>
+                <td style="padding:0.5rem 0;color:#3d2b1f">{disp}</td>
+            </tr>
+            <tr style="border-top:1px solid #f0ebe3">
+                <td style="padding:0.5rem 0;color:#7a6a5a">Página entrada</td>
+                <td style="padding:0.5rem 0;color:#3d2b1f">{entry_page or "/"}</td>
+            </tr>
+            <tr style="border-top:1px solid #f0ebe3">
+                <td style="padding:0.5rem 0;color:#7a6a5a">Origen</td>
+                <td style="padding:0.5rem 0;color:#3d2b1f">{ref}</td>
+            </tr>
+            <tr style="border-top:1px solid #f0ebe3">
+                <td style="padding:0.5rem 0;color:#7a6a5a;font-size:0.78rem">Session ID</td>
+                <td style="padding:0.5rem 0;color:#7a6a5a;font-family:monospace;font-size:0.78rem">{session_id or "—"}</td>
+            </tr>
+        </table>
+    """)
+    return _send(to_email, f"Green. — Nueva visita desde {geo}", html)
+
+
 def enviar_email_contacto(nombre: str, email: str, mensaje: str) -> bool:
     html = f"""
     <body style="font-family:'Jost',sans-serif;background:#f5f0e8;padding:2rem">
