@@ -496,14 +496,18 @@ async def api_login(data: LoginRequest, request: Request):
     user = login(data.email, data.password)
     if not user:
         raise HTTPException(status_code=401, detail="Email o contraseña incorrectos.")
-    token = crear_token(user.id, user.role.value)
+
+    # Capturar valores antes de cualquier manipulación del objeto ORM
+    uid, uname, uemail, urol = user.id, user.name, user.email, user.role.value
+    token = crear_token(uid, urol)
+
     from services.activity import log as alog
-    alog("user_login", "user", user.id, user.email, user_id=user.id, user_name=user.name, request=request)
+    alog("user_login", "user", uid, uemail, user_id=uid, user_name=uname, request=request)
     return {
-        "id":     user.id,
-        "nombre": user.name,
-        "email":  user.email,
-        "rol":    user.role.value,
+        "id":     uid,
+        "nombre": uname,
+        "email":  uemail,
+        "rol":    urol,
         "token":  token,
     }
 
@@ -517,15 +521,16 @@ async def api_registro(data: RegistroRequest, request: Request):
             email=data.email,
             password=data.password,
         )
+        uid, uname, uemail, urol = user.id, user.name, user.email, user.role.value
         from services.activity import log as alog
         from services.emails import enviar_bienvenida
-        alog("user_registered", "user", user.id, user.email, user_id=user.id, user_name=user.name, request=request)
-        enviar_bienvenida(user.email, user.name)
+        alog("user_registered", "user", uid, uemail, user_id=uid, user_name=uname, request=request)
+        enviar_bienvenida(uemail, uname)
         return {
-            "id":     user.id,
-            "nombre": user.name,
-            "email":  user.email,
-            "rol":    user.role.value,
+            "id":     uid,
+            "nombre": uname,
+            "email":  uemail,
+            "rol":    urol,
         }
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
