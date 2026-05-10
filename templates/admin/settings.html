@@ -5,20 +5,51 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Settings — Admin Green.</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
-        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/static/style.css" />
     <link rel="stylesheet" href="/static/admin.css" />
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style>
+        .settings-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(44,31,20,0.55);
+            z-index: 1000;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+        .settings-modal.open { display: flex; }
+        .settings-modal-box {
+            background: var(--white, #fff);
+            width: 100%;
+            max-width: 860px;
+            padding: 2.5rem;
+            position: relative;
+            margin: auto;
+        }
+        .settings-modal-close {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 1.4rem;
+            line-height: 1;
+            padding: 0.25rem;
+        }
+        .settings-modal-close:hover { color: var(--earth); }
+    </style>
 </head>
 
 <body class="admin-body">
 
     <aside class="admin-sidebar">
-        <a href="/" class="admin-logo">
-            Green<span style="color:var(--clay)">.</span>
-        </a>
+        <a href="/" class="admin-logo">Green<span style="color:var(--clay)">.</span></a>
         <div class="admin-nav">
             <a href="/admin/dashboard" class="admin-nav-link">Dashboard</a>
             <a href="/admin/productos" class="admin-nav-link">Productos</a>
@@ -35,39 +66,59 @@
             <p class="admin-subtitle">Configuración técnica — solo owner</p>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-bottom:3rem">
-            <div class="quick-card" style="opacity:0.5;cursor:not-allowed">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem">
+            <!-- Deshabilitados -->
+            <div class="quick-card" style="opacity:0.4;cursor:not-allowed">
                 <p class="quick-card-title">Base de datos</p>
                 <p class="quick-card-sub">Inicializar o resetear la DB</p>
             </div>
-            <div class="quick-card" style="opacity:0.5;cursor:not-allowed">
+            <div class="quick-card" style="opacity:0.4;cursor:not-allowed">
                 <p class="quick-card-title">API Keys</p>
                 <p class="quick-card-sub">Gestionar claves de servicios externos</p>
             </div>
-            <div class="quick-card" style="opacity:0.5;cursor:not-allowed">
+            <div class="quick-card" style="opacity:0.4;cursor:not-allowed">
                 <p class="quick-card-title">Backups</p>
                 <p class="quick-card-sub">Exportar datos de la tienda</p>
             </div>
-        </div>
 
-        <!-- Configuración de negocio -->
-        <div style="border-top:1px solid var(--border-light,#e8e0d8);padding-top:2rem;margin-bottom:2rem">
-            <h2 class="admin-title" style="font-size:1.2rem;margin-bottom:1.5rem">Configuración</h2>
-            <div id="settings-form" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;max-width:700px">
+            <!-- Activos -->
+            <div class="quick-card" style="cursor:pointer" onclick="abrirModal('modal-config')">
+                <p class="quick-card-title">Configuración</p>
+                <p class="quick-card-sub">Envío, banco, recordatorios, notificaciones</p>
+            </div>
+            <div class="quick-card" style="cursor:pointer" onclick="abrirModal('modal-log');cargarLog(1)">
+                <p class="quick-card-title">Activity Log</p>
+                <p class="quick-card-sub">Registro de actividad del sitio</p>
+            </div>
+        </div>
+    </main>
+
+
+    <!-- ── Modal Configuración ───────────────────────────────────── -->
+    <div class="settings-modal" id="modal-config" onclick="cerrarModalFondo(event,'modal-config')">
+        <div class="settings-modal-box">
+            <button class="settings-modal-close" onclick="cerrarModal('modal-config')">×</button>
+            <p class="section-eyebrow" style="color:var(--clay)">Settings</p>
+            <h2 class="admin-title" style="margin-bottom:1.75rem">Configuración</h2>
+
+            <div id="settings-form" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
                 <p style="color:var(--text-muted);font-size:0.85rem">Cargando...</p>
             </div>
-            <button class="admin-btn-sm" style="margin-top:1.25rem" onclick="guardarSettings()">
-                Guardar cambios
-            </button>
-            <span id="settings-msg" style="font-size:0.82rem;margin-left:1rem;color:var(--sage)"></span>
-        </div>
 
-        <!-- Activity Log -->
-        <div style="border-top:1px solid var(--border-light,#e8e0d8);padding-top:2rem">
-        <button class="admin-btn-sm" style="margin-bottom:1.5rem"
-                onclick="toggleLog()">Ver Activity Log</button>
-        <div id="log-section" style="display:none">
-            <h2 class="admin-title" style="font-size:1.2rem;margin-bottom:1.5rem">Activity Log</h2>
+            <div style="margin-top:1.5rem;display:flex;align-items:center;gap:1rem">
+                <button class="admin-btn-sm" onclick="guardarSettings()">Guardar cambios</button>
+                <span id="settings-msg" style="font-size:0.82rem;color:var(--sage)"></span>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ── Modal Activity Log ────────────────────────────────────── -->
+    <div class="settings-modal" id="modal-log" onclick="cerrarModalFondo(event,'modal-log')">
+        <div class="settings-modal-box" style="max-width:1100px">
+            <button class="settings-modal-close" onclick="cerrarModal('modal-log')">×</button>
+            <p class="section-eyebrow" style="color:var(--clay)">Settings</p>
+            <h2 class="admin-title" style="margin-bottom:1.5rem">Activity Log</h2>
 
             <!-- Filtros -->
             <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;align-items:flex-end">
@@ -104,19 +155,17 @@
                         <option value="order">Orden</option>
                         <option value="product">Producto</option>
                         <option value="user">Usuario</option>
-                        <option value="payment">Pago</option>
                     </select>
                 </div>
                 <div>
                     <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:0.3rem">Session ID</label>
                     <input type="text" id="log-session" placeholder="uuid..."
-                           style="font-size:0.82rem;padding:0.4rem 0.75rem;border:1px solid #ddd;border-radius:2px;width:220px;font-family:monospace">
+                           style="font-size:0.82rem;padding:0.4rem 0.75rem;border:1px solid #ddd;border-radius:2px;width:200px;font-family:monospace">
                 </div>
                 <button class="admin-btn-sm" onclick="cargarLog(1)">Filtrar</button>
                 <button class="admin-btn-sm" style="background:transparent;border:1px solid #ddd;color:var(--text-muted)" onclick="limpiarFiltros()">Limpiar</button>
             </div>
 
-            <!-- Tabla -->
             <div class="admin-tabla-wrapper">
                 <table class="admin-tabla" id="tabla-log">
                     <thead>
@@ -131,47 +180,63 @@
                         </tr>
                     </thead>
                     <tbody id="tbody-log">
-                        <tr><td colspan="6" style="text-align:center;color:var(--text-muted)">Cargando...</td></tr>
+                        <tr><td colspan="7" style="text-align:center;color:var(--text-muted)">Cargando...</td></tr>
                     </tbody>
                 </table>
             </div>
-
-            <!-- Paginación -->
             <div id="log-paginacion" style="display:flex;gap:0.5rem;align-items:center;margin-top:1rem;flex-wrap:wrap"></div>
-        </div><!-- cierra log-section -->
-        </div><!-- cierra activity log wrapper -->
-    </main>
+        </div>
+    </div>
 
-    <!-- <script src="/static/admin.js"></script>
-    <script>
-        verificarAdmin();
-        lucide.createIcons();
-    </script> -->
 
     <script src="/static/admin.js"></script>
     <script>
         verificarAdmin();
         document.addEventListener("DOMContentLoaded", () => {
             updateSettingsLink();
-            cargarSettings();
         });
 
+        // ── Modales ──────────────────────────────────────────────────
+        function abrirModal(id) {
+            document.getElementById(id).classList.add("open");
+            document.body.style.overflow = "hidden";
+            if (id === "modal-config") cargarSettings();
+        }
+
+        function cerrarModal(id) {
+            document.getElementById(id).classList.remove("open");
+            document.body.style.overflow = "";
+        }
+
+        function cerrarModalFondo(e, id) {
+            if (e.target === document.getElementById(id)) cerrarModal(id);
+        }
+
+        document.addEventListener("keydown", e => {
+            if (e.key === "Escape") {
+                ["modal-config", "modal-log"].forEach(id => {
+                    document.getElementById(id).classList.remove("open");
+                });
+                document.body.style.overflow = "";
+            }
+        });
+
+        // ── Configuración ────────────────────────────────────────────
         async function cargarSettings() {
             const settings = await apiAdmin("/api/admin/settings/values");
             if (!settings) return;
 
             const groups = {
-                "Envío": ["shipping.domicilio", "shipping.sucursal", "shipping.free_threshold"],
-                "Banco": ["bank.cbu", "bank.alias", "bank.holder"],
-                "Recordatorios": ["reminders.mp_hours", "reminders.transfer_hours"],
-                "Notificaciones": ["notifications.visit_email", "notifications.visit_email_to"],
+                "Envío": ["shipping.domicilio","shipping.sucursal","shipping.free_threshold"],
+                "Banco": ["bank.cbu","bank.alias","bank.holder"],
+                "Recordatorios": ["reminders.mp_hours","reminders.transfer_hours"],
+                "Notificaciones": ["notifications.visit_email","notifications.visit_email_to"],
             };
 
             const map = Object.fromEntries(settings.map(s => [s.key, s]));
             let html = "";
-
             for (const [group, keys] of Object.entries(groups)) {
-                html += `<div style="grid-column:1/-1;margin-top:0.75rem">
+                html += `<div style="grid-column:1/-1;margin-top:1rem;border-top:1px solid #f0ebe3;padding-top:1rem">
                     <p style="font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;
                                color:var(--text-muted);margin-bottom:0.75rem">${group}</p>
                 </div>`;
@@ -192,35 +257,21 @@
 
         async function guardarSettings() {
             const keys = [
-                "shipping.domicilio", "shipping.sucursal", "shipping.free_threshold",
-                "bank.cbu", "bank.alias", "bank.holder",
-                "reminders.mp_hours", "reminders.transfer_hours",
-                "notifications.visit_email", "notifications.visit_email_to",
+                "shipping.domicilio","shipping.sucursal","shipping.free_threshold",
+                "bank.cbu","bank.alias","bank.holder",
+                "reminders.mp_hours","reminders.transfer_hours",
+                "notifications.visit_email","notifications.visit_email_to",
             ];
             for (const key of keys) {
                 const el = document.getElementById("setting-" + key.replace(/\./g,"-"));
-                if (el) {
-                    await apiAdmin(`/api/admin/settings/values/${key}`, "PUT", { value: el.value });
-                }
+                if (el) await apiAdmin(`/api/admin/settings/values/${key}`, "PUT", { value: el.value });
             }
             const msg = document.getElementById("settings-msg");
             msg.textContent = "✓ Guardado";
             setTimeout(() => msg.textContent = "", 2500);
         }
 
-        function toggleLog() {
-            const sec = document.getElementById("log-section");
-            const btn = event.target;
-            if (sec.style.display === "none") {
-                sec.style.display = "block";
-                btn.textContent = "Ocultar Activity Log";
-                cargarLog(1);
-            } else {
-                sec.style.display = "none";
-                btn.textContent = "Ver Activity Log";
-            }
-        }
-
+        // ── Activity Log ─────────────────────────────────────────────
         const actionLabel = {
             session_start:        "Visita al sitio",
             order_created:        "Orden creada",
@@ -234,6 +285,8 @@
             product_deleted:      "Producto eliminado",
             user_login:           "Login",
             user_registered:      "Registro",
+            tracking_updated:     "Tracking actualizado",
+            factura_emitida:      "Factura emitida",
         };
 
         async function cargarLog(page) {
@@ -254,35 +307,33 @@
 
             const tbody = document.getElementById("tbody-log");
             if (data.rows.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-muted)">Sin registros.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted)">Sin registros.</td></tr>`;
             } else {
                 tbody.innerHTML = data.rows.map(r => {
-                    const dt = new Date(r.timestamp);
+                    const dt    = new Date(r.timestamp);
                     const fecha = dt.toLocaleDateString("es-AR") + " " +
-                                  dt.toLocaleTimeString("es-AR", {hour:"2-digit", minute:"2-digit"});
-                    const geo    = [r.country, r.city].filter(Boolean).join(" / ") || "—";
-                    const device = [r.device_type, r.browser, r.os].filter(Boolean).join(" · ") || "—";
-                    const sidShort = r.session_id ? r.session_id.substring(0, 8) + "…" : "—";
+                                  dt.toLocaleTimeString("es-AR", {hour:"2-digit",minute:"2-digit"});
+                    const geo     = [r.country, r.city].filter(Boolean).join(" / ") || "—";
+                    const device  = [r.device_type, r.browser, r.os].filter(Boolean).join(" · ") || "—";
+                    const sidShort = r.session_id ? r.session_id.substring(0,8) + "…" : "—";
                     return `
                     <tr>
                         <td style="font-size:0.8rem;white-space:nowrap">${fecha}</td>
                         <td style="font-size:0.75rem;font-family:monospace;cursor:pointer;color:var(--clay)"
                             title="${r.session_id || ''}"
-                            onclick="document.getElementById('log-session').value='${r.session_id || ''}';cargarLog(1)">
-                            ${sidShort}
-                        </td>
+                            onclick="document.getElementById('log-session').value='${r.session_id||''}';cargarLog(1)">
+                            ${sidShort}</td>
                         <td style="font-size:0.82rem">${r.user_name || "anónimo"}</td>
-                        <td><span class="admin-badge badge-${r.action.split("_")[0]}" style="font-size:0.75rem">
-                            ${actionLabel[r.action] || r.action}
-                        </span></td>
+                        <td><span class="admin-badge badge-${r.action.split('_')[0]}" style="font-size:0.75rem">
+                            ${actionLabel[r.action] || r.action}</span></td>
                         <td style="font-size:0.82rem">${r.entity_desc || "—"}</td>
-                        <td style="font-size:0.78rem;color:var(--text-muted)">${geo}<br><span style="font-size:0.72rem">${device}</span></td>
+                        <td style="font-size:0.78rem;color:var(--text-muted)">${geo}<br>
+                            <span style="font-size:0.72rem">${device}</span></td>
                         <td style="font-size:0.8rem;color:var(--text-muted)">${r.detail || "—"}</td>
                     </tr>`;
                 }).join("");
             }
 
-            // Paginación
             const pag = document.getElementById("log-paginacion");
             pag.innerHTML = "";
             if (data.pages > 1) {
@@ -304,19 +355,13 @@
         }
 
         function limpiarFiltros() {
-            document.getElementById("log-action").value    = "";
-            document.getElementById("log-entity").value    = "";
-            document.getElementById("log-session").value   = "";
-            document.getElementById("log-date-from").value = "";
-            document.getElementById("log-date-to").value   = "";
+            ["log-action","log-entity","log-session","log-date-from","log-date-to"]
+                .forEach(id => document.getElementById(id).value = "");
             cargarLog(1);
         }
 
         lucide.createIcons();
     </script>
 
-
-
 </body>
-
 </html>
