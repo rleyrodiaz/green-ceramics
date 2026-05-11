@@ -1194,14 +1194,21 @@ async def subir_comprobante(orden_id: int, request: Request):
         orden.status = OrderStatus.verifying
 
     from services.activity import log as alog
-    from services.emails import enviar_comprobante_recibido
+    from services.emails import enviar_comprobante_recibido, enviar_comprobante_al_owner
+    from services.settings_db import get_setting
     alog("comprobante_uploaded", "order", orden_id, f"Orden #{orden_id}",
          user_name="cliente", request=request)
     try:
         with get_db() as db:
             o = db.query(Order).filter(Order.id == orden_id).first()
-            if o and o.customer_email:
-                enviar_comprobante_recibido(o.customer_email, o.shipping_name or "", o.id, float(o.total))
+            if o:
+                if o.customer_email:
+                    enviar_comprobante_recibido(o.customer_email, o.shipping_name or "", o.id, float(o.total))
+                owner_email = get_setting("notifications.visit_email_to")
+                if owner_email:
+                    enviar_comprobante_al_owner(
+                        owner_email, o.id, o.shipping_name or "", float(o.total), result["url"]
+                    )
     except Exception as e:
         print(f"⚠️ Error email comprobante: {e}")
     return {"ok": True, "url": result["url"]}

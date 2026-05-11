@@ -115,7 +115,7 @@
 
     <!-- ── Modal Activity Log ────────────────────────────────────── -->
     <div class="settings-modal" id="modal-log" onclick="cerrarModalFondo(event,'modal-log')">
-        <div class="settings-modal-box" style="max-width:1100px">
+        <div class="settings-modal-box" style="max-width:95vw;width:95vw">
             <button class="settings-modal-close" onclick="cerrarModal('modal-log')">×</button>
             <p class="section-eyebrow" style="color:var(--clay)">Settings</p>
             <h2 class="admin-title" style="margin-bottom:1.5rem">Activity Log</h2>
@@ -166,8 +166,8 @@
                 <button class="admin-btn-sm" style="background:transparent;border:1px solid #ddd;color:var(--text-muted)" onclick="limpiarFiltros()">Limpiar</button>
             </div>
 
-            <div class="admin-tabla-wrapper">
-                <table class="admin-tabla" id="tabla-log">
+            <div class="admin-tabla-wrapper" style="overflow-x:auto">
+                <table class="admin-tabla" id="tabla-log" style="min-width:900px">
                     <thead>
                         <tr>
                             <th>Fecha / Hora</th>

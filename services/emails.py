@@ -474,6 +474,66 @@ def enviar_confirmacion_pedido(
     return _send(to_email, f"Green. — Pedido #{order_id} recibido", html)
 
 
+def enviar_comprobante_al_owner(
+    to_email:        str,
+    order_id:        int,
+    customer_name:   str,
+    total:           float,
+    comprobante_url: str,
+) -> bool:
+    import base64, requests as _req
+
+    body = _wrap(f"""
+        {_eyebrow("Comprobante recibido")}
+        <h2 style="font-family:'Georgia',serif;font-size:1.4rem;font-weight:300;
+                   color:#3d2b1f;margin:0 0 1.5rem">Nuevo comprobante de transferencia</h2>
+        <table style="width:100%;border-collapse:collapse;font-size:0.88rem">
+            <tr>
+                <td style="padding:0.5rem 0;color:#7a6a5a;width:120px">Pedido</td>
+                <td style="padding:0.5rem 0;color:#3d2b1f">#{order_id}</td>
+            </tr>
+            <tr style="border-top:1px solid #f0ebe3">
+                <td style="padding:0.5rem 0;color:#7a6a5a">Cliente</td>
+                <td style="padding:0.5rem 0;color:#3d2b1f">{customer_name}</td>
+            </tr>
+            <tr style="border-top:1px solid #f0ebe3">
+                <td style="padding:0.5rem 0;color:#7a6a5a">Monto</td>
+                <td style="padding:0.5rem 0;color:#3d2b1f;font-family:'Georgia',serif">{_precio(total)}</td>
+            </tr>
+        </table>
+        <p style="color:#7a6a5a;font-size:0.85rem;margin-top:1.5rem">
+            El comprobante está adjunto a este email.
+        </p>
+    """)
+
+    try:
+        resend.api_key = RESEND_API_KEY
+        params: dict = {
+            "from":    EMAIL_FROM,
+            "to":      to_email,
+            "subject": f"Green. — Comprobante pedido #{order_id} — {customer_name}",
+            "html":    body,
+        }
+        # Adjuntar imagen si la URL es accesible
+        try:
+            resp = _req.get(comprobante_url, timeout=5)
+            if resp.status_code == 200:
+                ext      = comprobante_url.split(".")[-1].split("?")[0] or "jpg"
+                filename = f"comprobante_orden_{order_id}.{ext}"
+                params["attachments"] = [{
+                    "filename": filename,
+                    "content":  list(resp.content),
+                }]
+        except Exception as e:
+            print(f"⚠️ No se pudo adjuntar comprobante: {e}")
+
+        resend.Emails.send(params)
+        return True
+    except Exception as e:
+        print(f"⚠️ Error email comprobante owner: {e}")
+        return False
+
+
 def enviar_notificacion_visita(
     to_email:   str,
     country:    str = "",

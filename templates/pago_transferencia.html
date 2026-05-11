@@ -156,8 +156,9 @@
 
             try {
                 const res = await fetch(`/api/ordenes/${ordenId}/comprobante`, {
-                    method: "POST",
-                    body:   formData,
+                    method:  "POST",
+                    headers: { "X-Session-ID": window.getSessionId ? window.getSessionId() : "" },
+                    body:    formData,
                 });
                 if (res.ok) {
                     document.getElementById("upload-section").style.display  = "none";
