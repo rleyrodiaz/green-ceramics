@@ -1231,19 +1231,11 @@ async def pago_exitoso(request: Request):
 
 @app.get("/pago/fallido", response_class=HTMLResponse)
 async def pago_fallido(request: Request):
-    from services.activity import log as alog
     from db.connection import get_db as _get_db
     from db.models import Order as _Order
     from services.emails import enviar_pago_fallido
 
     order_id = request.query_params.get("external_reference")
-    pref_id  = request.query_params.get("preference_id", "")
-    alog("payment_mp_failed", "order",
-         int(order_id) if order_id else None,
-         f"Orden #{order_id}" if order_id else "desconocida",
-         detail=f"preference_id: {pref_id}",
-         request=request)
-
     if order_id:
         try:
             with _get_db() as db:
@@ -1254,6 +1246,20 @@ async def pago_fallido(request: Request):
             print(f"⚠️ Error email pago fallido: {e}")
 
     return templates.TemplateResponse("pago_fallido.html", {"request": request, "is_production": IS_PRODUCTION})
+
+
+@app.post("/api/log/pago-fallido")
+async def log_pago_fallido(request: Request):
+    from services.activity import log as alog
+    body     = await request.json()
+    order_id = body.get("order_id")
+    pref_id  = body.get("preference_id", "")
+    alog("payment_mp_failed", "order",
+         int(order_id) if order_id else None,
+         f"Orden #{order_id}" if order_id else "desconocida",
+         detail=f"preference_id: {pref_id}",
+         request=request)
+    return {"ok": True}
 
 
 @app.get("/pago/pendiente", response_class=HTMLResponse)
