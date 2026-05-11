@@ -234,6 +234,13 @@
         }
 
         async function avanzarEstado(id, status) {
+            if (status === "shipped") {
+                const tracking = document.getElementById(`tracking-${id}`)?.value.trim();
+                if (!tracking) {
+                    alert("Ingresá el número de seguimiento antes de marcar como enviada.");
+                    return;
+                }
+            }
             await apiAdmin(`/api/admin/ordenes/${id}/status`, "PUT", { status });
             const statusActual = document.querySelector(".filtro-status.active").dataset.status;
             cargarOrdenes(statusActual);
