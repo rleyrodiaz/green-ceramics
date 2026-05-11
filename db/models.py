@@ -211,7 +211,7 @@ class ActivityLog(Base):
     device_type : Mapped[str]      = mapped_column(String(20),  nullable=True)
     browser     : Mapped[str]      = mapped_column(String(60),  nullable=True)
     os          : Mapped[str]      = mapped_column(String(60),  nullable=True)
-    referrer    : Mapped[str]      = mapped_column(String(300), nullable=True)
+    referrer    : Mapped[str]      = mapped_column(Text,        nullable=True)
 
     __table_args__ = (
         Index("ix_activity_timestamp",  "timestamp"),

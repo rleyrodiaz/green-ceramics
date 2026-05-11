@@ -98,4 +98,6 @@ def log(
                 referrer    = referrer,
             ))
     except Exception as e:
-        print(f"⚠️ Error activity log: {e}")
+        import traceback
+        print(f"⚠️ Error activity log [{action}]: {e}")
+        traceback.print_exc()

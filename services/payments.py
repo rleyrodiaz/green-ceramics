@@ -8,7 +8,7 @@ from db.models import Order
 sdk = mercadopago.SDK(MP_ACCESS_TOKEN)
 
 
-def crear_preferencia(order: Order, items: list) -> dict:
+def crear_preferencia(order: Order, items: list, session_id: str = "") -> dict:
     """
     Crea una preferencia de pago en MercadoPago.
     Retorna dict con 'id' y 'init_point' (URL de pago).
@@ -25,9 +25,9 @@ def crear_preferencia(order: Order, items: list) -> dict:
             for item in items
         ],
         "back_urls": {
-            "success": "https://green-ceramics.onrender.com/pago/exitoso",
-            "failure": "https://green-ceramics.onrender.com/pago/fallido",
-            "pending": "https://green-ceramics.onrender.com/pago/pendiente",
+            "success": f"https://green-ceramics.onrender.com/pago/exitoso?sid={session_id}",
+            "failure": f"https://green-ceramics.onrender.com/pago/fallido?sid={session_id}",
+            "pending": f"https://green-ceramics.onrender.com/pago/pendiente?sid={session_id}",
         },
         # "back_urls": {
         #     "success": "http://localhost:8000/pago/exitoso",

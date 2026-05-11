@@ -173,13 +173,19 @@ async def lifespan(app: FastAPI):
             "device_type": "VARCHAR(20)",
             "browser":     "VARCHAR(60)",
             "os":          "VARCHAR(60)",
-            "referrer":    "VARCHAR(300)",
+            "referrer":    "TEXT",
         }
         for col, coltype in new_log_cols.items():
             if col not in log_cols:
                 conn.execute(text(f"ALTER TABLE activity_logs ADD COLUMN IF NOT EXISTS {col} {coltype}"))
                 conn.commit()
                 print(f"✅ Columna activity_logs.{col} agregada")
+        # Fix: upgrade referrer from VARCHAR(300) to TEXT if needed
+        ref_col = next((c for c in sa_inspect(engine).get_columns("activity_logs") if c["name"] == "referrer"), None)
+        if ref_col and "varchar" in str(ref_col.get("type", "")).lower():
+            conn.execute(text("ALTER TABLE activity_logs ALTER COLUMN referrer TYPE TEXT"))
+            conn.commit()
+            print("✅ activity_logs.referrer ampliado a TEXT")
 
     # Seed app_settings con valores de EVs (solo si la clave no existe)
     from services.settings_db import seed_defaults
@@ -446,8 +452,9 @@ async def crear_orden(data: OrdenRequest, request: Request):
         if data.payment_method == "mp":
             try:
                 from services.payments import crear_preferencia
-                items_db = db.query(OrderItem).filter(OrderItem.order_id == orden.id).all()
-                preferencia = crear_preferencia(orden, items_db)
+                items_db   = db.query(OrderItem).filter(OrderItem.order_id == orden.id).all()
+                _sid       = request.headers.get("X-Session-ID", "")
+                preferencia = crear_preferencia(orden, items_db, session_id=_sid)
                 orden.mp_preference_id = preferencia["id"]
                 orden.mp_checkout_at   = __import__("datetime").datetime.utcnow()
                 mp_url = preferencia["init_point"]
@@ -1231,11 +1238,22 @@ async def pago_exitoso(request: Request):
 
 @app.get("/pago/fallido", response_class=HTMLResponse)
 async def pago_fallido(request: Request):
+    from services.activity import log as alog
     from db.connection import get_db as _get_db
     from db.models import Order as _Order
     from services.emails import enviar_pago_fallido
 
-    order_id = request.query_params.get("external_reference")
+    order_id   = request.query_params.get("external_reference")
+    session_id = request.query_params.get("sid", "")
+    pref_id    = request.query_params.get("preference_id", "")
+
+    alog("payment_mp_failed", "order",
+         int(order_id) if order_id else None,
+         f"Orden #{order_id}" if order_id else "desconocida",
+         detail=f"preference_id: {pref_id}",
+         session_id=session_id or None,
+         request=request)
+
     if order_id:
         try:
             with _get_db() as db:
@@ -1265,10 +1283,12 @@ async def log_pago_fallido(request: Request):
 @app.get("/pago/pendiente", response_class=HTMLResponse)
 async def pago_pendiente(request: Request):
     from services.activity import log as alog
-    order_id = request.query_params.get("external_reference")
+    order_id   = request.query_params.get("external_reference")
+    session_id = request.query_params.get("sid", "")
     alog("payment_mp_pending", "order",
          int(order_id) if order_id else None,
          f"Orden #{order_id}" if order_id else "desconocida",
+         session_id=session_id or None,
          request=request)
     return templates.TemplateResponse("pago_pendiente.html", {"request": request, "is_production": IS_PRODUCTION})
 
