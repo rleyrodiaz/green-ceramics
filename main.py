@@ -876,6 +876,12 @@ async def api_update_orden_status(
     from db.models import Order as _O
     from services.emails import enviar_pago_confirmado, enviar_pedido_enviado, enviar_pedido_entregado
 
+    if body["status"] == "shipped":
+        with _gdb() as db:
+            o = db.query(_O).filter(_O.id == orden_id).first()
+            if not o or not (o.tracking_number or "").strip():
+                raise HTTPException(status_code=400, detail="Se requiere número de seguimiento para marcar como enviada.")
+
     orden = update_order_status(orden_id, body["status"])
     alog("order_status_changed", "order", orden_id, f"Orden #{orden_id}",
          detail=f"→ {body['status']}", user_id=int(admin.get("sub", 0)), request=request)

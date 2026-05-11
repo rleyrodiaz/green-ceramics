@@ -235,13 +235,27 @@
 
         async function avanzarEstado(id, status) {
             if (status === "shipped") {
-                const tracking = document.getElementById(`tracking-${id}`)?.value.trim();
-                if (!tracking) {
+                const trackingInput = document.getElementById("tracking-" + id);
+                if (!trackingInput || !trackingInput.value.trim()) {
                     alert("Ingresá el número de seguimiento antes de marcar como enviada.");
                     return;
                 }
             }
-            await apiAdmin(`/api/admin/ordenes/${id}/status`, "PUT", { status });
+            const token = localStorage.getItem("admin_token");
+            const res = await fetch(`/api/admin/ordenes/${id}/status`, {
+                method: "PUT",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                    "X-Session-ID": window.getSessionId ? window.getSessionId() : "",
+                },
+                body: JSON.stringify({ status }),
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                alert(err.detail || "Error al cambiar el estado.");
+                return;
+            }
             const statusActual = document.querySelector(".filtro-status.active").dataset.status;
             cargarOrdenes(statusActual);
         }
