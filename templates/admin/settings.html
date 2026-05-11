@@ -5,7 +5,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Settings — Admin Green.</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
+        rel="stylesheet" />
     <link rel="stylesheet" href="/static/style.css" />
     <link rel="stylesheet" href="/static/admin.css" />
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
@@ -14,14 +16,18 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(44,31,20,0.55);
+            background: rgba(44, 31, 20, 0.55);
             z-index: 1000;
             align-items: flex-start;
             justify-content: center;
             padding: 2rem;
             overflow-y: auto;
         }
-        .settings-modal.open { display: flex; }
+
+        .settings-modal.open {
+            display: flex;
+        }
+
         .settings-modal-box {
             background: var(--white, #fff);
             width: 100%;
@@ -30,6 +36,7 @@
             position: relative;
             margin: auto;
         }
+
         .settings-modal-close {
             position: absolute;
             top: 1.25rem;
@@ -42,7 +49,10 @@
             line-height: 1;
             padding: 0.25rem;
         }
-        .settings-modal-close:hover { color: var(--earth); }
+
+        .settings-modal-close:hover {
+            color: var(--earth);
+        }
     </style>
 </head>
 
@@ -115,7 +125,7 @@
 
     <!-- ── Modal Activity Log ────────────────────────────────────── -->
     <div class="settings-modal" id="modal-log" onclick="cerrarModalFondo(event,'modal-log')">
-        <div class="settings-modal-box" style="max-width:95vw;width:95vw">
+        <div class="settings-modal-box" style="max-width:90vw;width:90vw">
             <button class="settings-modal-close" onclick="cerrarModal('modal-log')">×</button>
             <p class="section-eyebrow" style="color:var(--clay)">Settings</p>
             <h2 class="admin-title" style="margin-bottom:1.5rem">Activity Log</h2>
@@ -123,16 +133,22 @@
             <!-- Filtros -->
             <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;align-items:flex-end">
                 <div>
-                    <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:0.3rem">Desde</label>
-                    <input type="date" id="log-date-from" style="font-size:0.85rem;padding:0.4rem 0.75rem;border:1px solid #ddd;border-radius:2px">
+                    <label
+                        style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:0.3rem">Desde</label>
+                    <input type="date" id="log-date-from"
+                        style="font-size:0.85rem;padding:0.4rem 0.75rem;border:1px solid #ddd;border-radius:2px">
                 </div>
                 <div>
-                    <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:0.3rem">Hasta</label>
-                    <input type="date" id="log-date-to" style="font-size:0.85rem;padding:0.4rem 0.75rem;border:1px solid #ddd;border-radius:2px">
+                    <label
+                        style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:0.3rem">Hasta</label>
+                    <input type="date" id="log-date-to"
+                        style="font-size:0.85rem;padding:0.4rem 0.75rem;border:1px solid #ddd;border-radius:2px">
                 </div>
                 <div>
-                    <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:0.3rem">Acción</label>
-                    <select id="log-action" style="font-size:0.85rem;padding:0.4rem 0.75rem;border:1px solid #ddd;border-radius:2px">
+                    <label
+                        style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:0.3rem">Acción</label>
+                    <select id="log-action"
+                        style="font-size:0.85rem;padding:0.4rem 0.75rem;border:1px solid #ddd;border-radius:2px">
                         <option value="">Todas</option>
                         <option value="session_start">Visita al sitio</option>
                         <option value="user_login">Login (autenticación)</option>
@@ -149,8 +165,10 @@
                     </select>
                 </div>
                 <div>
-                    <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:0.3rem">Entidad</label>
-                    <select id="log-entity" style="font-size:0.85rem;padding:0.4rem 0.75rem;border:1px solid #ddd;border-radius:2px">
+                    <label
+                        style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:0.3rem">Entidad</label>
+                    <select id="log-entity"
+                        style="font-size:0.85rem;padding:0.4rem 0.75rem;border:1px solid #ddd;border-radius:2px">
                         <option value="">Todas</option>
                         <option value="order">Orden</option>
                         <option value="product">Producto</option>
@@ -158,12 +176,15 @@
                     </select>
                 </div>
                 <div>
-                    <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:0.3rem">Session ID</label>
+                    <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:0.3rem">Session
+                        ID</label>
                     <input type="text" id="log-session" placeholder="uuid..."
-                           style="font-size:0.82rem;padding:0.4rem 0.75rem;border:1px solid #ddd;border-radius:2px;width:200px;font-family:monospace">
+                        style="font-size:0.82rem;padding:0.4rem 0.75rem;border:1px solid #ddd;border-radius:2px;width:200px;font-family:monospace">
                 </div>
                 <button class="admin-btn-sm" onclick="cargarLog(1)">Filtrar</button>
-                <button class="admin-btn-sm" style="background:transparent;border:1px solid #ddd;color:var(--text-muted)" onclick="limpiarFiltros()">Limpiar</button>
+                <button class="admin-btn-sm"
+                    style="background:transparent;border:1px solid #ddd;color:var(--text-muted)"
+                    onclick="limpiarFiltros()">Limpiar</button>
             </div>
 
             <div class="admin-tabla-wrapper" style="overflow-x:auto">
@@ -180,11 +201,14 @@
                         </tr>
                     </thead>
                     <tbody id="tbody-log">
-                        <tr><td colspan="7" style="text-align:center;color:var(--text-muted)">Cargando...</td></tr>
+                        <tr>
+                            <td colspan="7" style="text-align:center;color:var(--text-muted)">Cargando...</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
-            <div id="log-paginacion" style="display:flex;gap:0.5rem;align-items:center;margin-top:1rem;flex-wrap:wrap"></div>
+            <div id="log-paginacion" style="display:flex;gap:0.5rem;align-items:center;margin-top:1rem;flex-wrap:wrap">
+            </div>
         </div>
     </div>
 
@@ -227,10 +251,10 @@
             if (!settings) return;
 
             const groups = {
-                "Envío": ["shipping.domicilio","shipping.sucursal","shipping.free_threshold"],
-                "Banco": ["bank.cbu","bank.alias","bank.holder"],
-                "Recordatorios": ["reminders.mp_hours","reminders.transfer_hours"],
-                "Notificaciones": ["notifications.visit_email","notifications.visit_email_to"],
+                "Envío": ["shipping.domicilio", "shipping.sucursal", "shipping.free_threshold"],
+                "Banco": ["bank.cbu", "bank.alias", "bank.holder"],
+                "Recordatorios": ["reminders.mp_hours", "reminders.transfer_hours"],
+                "Notificaciones": ["notifications.visit_email", "notifications.visit_email_to"],
             };
 
             const map = Object.fromEntries(settings.map(s => [s.key, s]));
@@ -245,7 +269,7 @@
                     html += `
                     <div class="form-group" style="margin-bottom:0.5rem">
                         <label style="font-size:0.8rem">${s.label}</label>
-                        <input type="text" id="setting-${key.replace(/\./g,'-')}"
+                        <input type="text" id="setting-${key.replace(/\./g, '-')}"
                                value="${s.value}"
                                style="font-size:0.85rem;padding:0.4rem 0.75rem;border:1px solid #ddd;
                                       border-radius:2px;width:100%">
@@ -257,13 +281,13 @@
 
         async function guardarSettings() {
             const keys = [
-                "shipping.domicilio","shipping.sucursal","shipping.free_threshold",
-                "bank.cbu","bank.alias","bank.holder",
-                "reminders.mp_hours","reminders.transfer_hours",
-                "notifications.visit_email","notifications.visit_email_to",
+                "shipping.domicilio", "shipping.sucursal", "shipping.free_threshold",
+                "bank.cbu", "bank.alias", "bank.holder",
+                "reminders.mp_hours", "reminders.transfer_hours",
+                "notifications.visit_email", "notifications.visit_email_to",
             ];
             for (const key of keys) {
-                const el = document.getElementById("setting-" + key.replace(/\./g,"-"));
+                const el = document.getElementById("setting-" + key.replace(/\./g, "-"));
                 if (el) await apiAdmin(`/api/admin/settings/values/${key}`, "PUT", { value: el.value });
             }
             const msg = document.getElementById("settings-msg");
@@ -273,34 +297,34 @@
 
         // ── Activity Log ─────────────────────────────────────────────
         const actionLabel = {
-            session_start:        "Visita al sitio",
-            order_created:        "Orden creada",
+            session_start: "Visita al sitio",
+            order_created: "Orden creada",
             order_status_changed: "Estado cambiado",
-            payment_mp_approved:  "Pago MP aprobado",
-            payment_mp_rejected:  "Pago MP rechazado",
-            payment_mp_failed:    "Pago MP fallido",
-            payment_mp_pending:   "Pago MP pendiente",
+            payment_mp_approved: "Pago MP aprobado",
+            payment_mp_rejected: "Pago MP rechazado",
+            payment_mp_failed: "Pago MP fallido",
+            payment_mp_pending: "Pago MP pendiente",
             comprobante_uploaded: "Comprobante subido",
-            product_updated:      "Producto actualizado",
-            product_deleted:      "Producto eliminado",
-            user_login:           "Login",
-            user_registered:      "Registro",
-            tracking_updated:     "Tracking actualizado",
-            factura_emitida:      "Factura emitida",
+            product_updated: "Producto actualizado",
+            product_deleted: "Producto eliminado",
+            user_login: "Login",
+            user_registered: "Registro",
+            tracking_updated: "Tracking actualizado",
+            factura_emitida: "Factura emitida",
         };
 
         async function cargarLog(page) {
             const params = new URLSearchParams({ page, page_size: 50 });
-            const action      = document.getElementById("log-action").value;
+            const action = document.getElementById("log-action").value;
             const entity_type = document.getElementById("log-entity").value;
-            const session_id  = document.getElementById("log-session").value.trim();
-            const date_from   = document.getElementById("log-date-from").value;
-            const date_to     = document.getElementById("log-date-to").value;
-            if (action)      params.set("action", action);
+            const session_id = document.getElementById("log-session").value.trim();
+            const date_from = document.getElementById("log-date-from").value;
+            const date_to = document.getElementById("log-date-to").value;
+            if (action) params.set("action", action);
             if (entity_type) params.set("entity_type", entity_type);
-            if (session_id)  params.set("session_id", session_id);
-            if (date_from)   params.set("date_from", date_from);
-            if (date_to)     params.set("date_to", date_to);
+            if (session_id) params.set("session_id", session_id);
+            if (date_from) params.set("date_from", date_from);
+            if (date_to) params.set("date_to", date_to);
 
             const data = await apiAdmin(`/api/admin/activity?${params}`);
             if (!data) return;
@@ -310,18 +334,18 @@
                 tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted)">Sin registros.</td></tr>`;
             } else {
                 tbody.innerHTML = data.rows.map(r => {
-                    const dt    = new Date(r.timestamp);
+                    const dt = new Date(r.timestamp);
                     const fecha = dt.toLocaleDateString("es-AR") + " " +
-                                  dt.toLocaleTimeString("es-AR", {hour:"2-digit",minute:"2-digit"});
-                    const geo     = [r.country, r.city].filter(Boolean).join(" / ") || "—";
-                    const device  = [r.device_type, r.browser, r.os].filter(Boolean).join(" · ") || "—";
-                    const sidShort = r.session_id ? r.session_id.substring(0,8) + "…" : "—";
+                        dt.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+                    const geo = [r.country, r.city].filter(Boolean).join(" / ") || "—";
+                    const device = [r.device_type, r.browser, r.os].filter(Boolean).join(" · ") || "—";
+                    const sidShort = r.session_id ? r.session_id.substring(0, 8) + "…" : "—";
                     return `
                     <tr>
                         <td style="font-size:0.8rem;white-space:nowrap">${fecha}</td>
                         <td style="font-size:0.75rem;font-family:monospace;cursor:pointer;color:var(--clay)"
                             title="${r.session_id || ''}"
-                            onclick="document.getElementById('log-session').value='${r.session_id||''}';cargarLog(1)">
+                            onclick="document.getElementById('log-session').value='${r.session_id || ''}';cargarLog(1)">
                             ${sidShort}</td>
                         <td style="font-size:0.82rem">${r.user_name || "anónimo"}</td>
                         <td><span class="admin-badge badge-${r.action.split('_')[0]}" style="font-size:0.75rem">
@@ -355,7 +379,7 @@
         }
 
         function limpiarFiltros() {
-            ["log-action","log-entity","log-session","log-date-from","log-date-to"]
+            ["log-action", "log-entity", "log-session", "log-date-from", "log-date-to"]
                 .forEach(id => document.getElementById(id).value = "");
             cargarLog(1);
         }
@@ -364,4 +388,5 @@
     </script>
 
 </body>
+
 </html>

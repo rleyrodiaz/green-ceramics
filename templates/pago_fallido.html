@@ -70,20 +70,6 @@
         <p>© 2026 Green. Cerámica en Gres</p>
     </footer>
     <script src="/static/main.js"></script>
-    <script>
-        const _params = new URLSearchParams(window.location.search);
-        fetch("/api/log/pago-fallido", {
-            method:  "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-Session-ID": window.getSessionId ? window.getSessionId() : "",
-            },
-            body: JSON.stringify({
-                order_id:      _params.get("external_reference") || "",
-                preference_id: _params.get("preference_id") || "",
-            }),
-        }).catch(() => {});
-    </script>
 </body>
 
 </html>

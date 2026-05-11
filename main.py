@@ -1266,20 +1266,6 @@ async def pago_fallido(request: Request):
     return templates.TemplateResponse("pago_fallido.html", {"request": request, "is_production": IS_PRODUCTION})
 
 
-@app.post("/api/log/pago-fallido")
-async def log_pago_fallido(request: Request):
-    from services.activity import log as alog
-    body     = await request.json()
-    order_id = body.get("order_id")
-    pref_id  = body.get("preference_id", "")
-    alog("payment_mp_failed", "order",
-         int(order_id) if order_id else None,
-         f"Orden #{order_id}" if order_id else "desconocida",
-         detail=f"preference_id: {pref_id}",
-         request=request)
-    return {"ok": True}
-
-
 @app.get("/pago/pendiente", response_class=HTMLResponse)
 async def pago_pendiente(request: Request):
     from services.activity import log as alog
