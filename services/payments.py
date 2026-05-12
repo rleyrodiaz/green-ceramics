@@ -1,7 +1,7 @@
 import hmac
 import hashlib
 import mercadopago
-from config.settings import MP_ACCESS_TOKEN, MP_PUBLIC_KEY
+from config.settings import MP_ACCESS_TOKEN, MP_PUBLIC_KEY, MP_SANDBOX
 from db.connection import get_db
 from db.models import Order
 
@@ -47,10 +47,10 @@ def crear_preferencia(order: Order, items: list, session_id: str = "") -> dict:
     if result["status"] not in [200, 201]:
         raise ValueError(f"Error creando preferencia MP: {result}")
 
+    url = result["response"]["sandbox_init_point"] if MP_SANDBOX else result["response"]["init_point"]
     return {
         "id":         result["response"]["id"],
-        "init_point": result["response"]["init_point"],      # producción
-        "sandbox_url": result["response"]["sandbox_init_point"],  # pruebas
+        "init_point": url,
     }
 
 

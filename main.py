@@ -149,6 +149,7 @@ async def lifespan(app: FastAPI):
             "mp_checkout_at":            "TIMESTAMP",
             "reminder_mp_sent_at":       "TIMESTAMP",
             "reminder_transfer_sent_at": "TIMESTAMP",
+            "checkout_session_id":       "VARCHAR(36)",
         }.items():
             if col not in cols:
                 conn.execute(text(f"ALTER TABLE orders ADD COLUMN IF NOT EXISTS {col} {coltype}"))
@@ -455,8 +456,9 @@ async def crear_orden(data: OrdenRequest, request: Request):
                 items_db   = db.query(OrderItem).filter(OrderItem.order_id == orden.id).all()
                 _sid       = request.headers.get("X-Session-ID", "")
                 preferencia = crear_preferencia(orden, items_db, session_id=_sid)
-                orden.mp_preference_id = preferencia["id"]
-                orden.mp_checkout_at   = __import__("datetime").datetime.utcnow()
+                orden.mp_preference_id    = preferencia["id"]
+                orden.mp_checkout_at      = __import__("datetime").datetime.utcnow()
+                orden.checkout_session_id = _sid or None
                 mp_url = preferencia["init_point"]
             except Exception as e:
                 print(f"⚠️ Error MP: {e}")
@@ -1369,9 +1371,17 @@ async def webhook_mp(request: Request):
         except Exception as e:
             print(f"⚠️ Error email pago confirmado: {e}")
     elif resultado["status"] in ("rejected", "cancelled") and resultado["order_id"]:
+        _sid_rejected = None
+        try:
+            with _gdb() as db:
+                _o = db.query(_O).filter(_O.id == resultado["order_id"]).first()
+                _sid_rejected = _o.checkout_session_id if _o else None
+        except Exception:
+            pass
         alog("payment_mp_rejected", "order", resultado["order_id"],
              f"Orden #{resultado['order_id']}",
              detail=f"status: {resultado['status']} | Payment ID: {resultado['payment_id']}",
+             session_id=_sid_rejected,
              user_name="mercadopago")
 
     return {"ok": True}

@@ -334,9 +334,10 @@
                 tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted)">Sin registros.</td></tr>`;
             } else {
                 tbody.innerHTML = data.rows.map(r => {
-                    const dt = new Date(r.timestamp);
-                    const fecha = dt.toLocaleDateString("es-AR") + " " +
-                        dt.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+                    const dt = new Date(r.timestamp + "Z");
+                    const tz = "America/Argentina/Buenos_Aires";
+                    const fecha = dt.toLocaleDateString("es-AR", { timeZone: tz }) + " " +
+                        dt.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", timeZone: tz });
                     const geo = [r.country, r.city].filter(Boolean).join(" / ") || "—";
                     const device = [r.device_type, r.browser, r.os].filter(Boolean).join(" · ") || "—";
                     const sidShort = r.session_id ? r.session_id.substring(0, 8) + "…" : "—";
@@ -353,7 +354,8 @@
                         <td style="font-size:0.82rem">${r.entity_desc || "—"}</td>
                         <td style="font-size:0.78rem;color:var(--text-muted)">${geo}<br>
                             <span style="font-size:0.72rem">${device}</span></td>
-                        <td style="font-size:0.8rem;color:var(--text-muted)">${r.detail || "—"}</td>
+                        <td style="font-size:0.8rem;color:var(--text-muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+                            title="${r.detail || ''}">${r.detail || "—"}</td>
                     </tr>`;
                 }).join("");
             }

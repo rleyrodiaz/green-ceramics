@@ -49,6 +49,7 @@ CLOUDINARY_CONFIG = {
 MP_ACCESS_TOKEN    = os.getenv("MP_ACCESS_TOKEN")
 MP_PUBLIC_KEY      = os.getenv("MP_PUBLIC_KEY")
 MP_WEBHOOK_SECRET  = os.getenv("MP_WEBHOOK_SECRET")
+MP_SANDBOX         = os.getenv("MP_SANDBOX", "false").lower() == "true"
 
 # Banco (transferencia)
 BANK_CBU    = os.getenv("BANK_CBU", "")

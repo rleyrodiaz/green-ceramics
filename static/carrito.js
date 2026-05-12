@@ -18,8 +18,10 @@ function renderCarrito() {
     }
 
     const subtotal = items.reduce((sum, i) => sum + i.precio * i.quantity, 0);
-    // const envio = subtotal >= 50000 ? 0 : 3500;
-    const envio = 0;
+    const threshold = shippingCosts.free_threshold;
+    const costoEnvio = shippingCosts.domicilio;
+    const envioGratis = subtotal >= threshold;
+    const envio = envioGratis ? 0 : costoEnvio;
     const total = subtotal + envio;
     const fmtPrecio = n => `$${n.toLocaleString("es-AR")}`;
 
@@ -55,12 +57,12 @@ function renderCarrito() {
             <span>${fmtPrecio(subtotal)}</span>
         </div>
         <div class="resumen-linea">
-            <span>Envío</span>
-            <span>${envio === 0 ? "Gratis" : fmtPrecio(envio)}</span>
+            <span>Envío a domicilio</span>
+            <span>${envioGratis ? "Gratis" : fmtPrecio(envio)}</span>
         </div>
-        ${envio > 0 ? `
+        ${!envioGratis ? `
             <p class="resumen-envio-hint">
-                Agregá ${fmtPrecio(50000 - subtotal)} más para envío gratis
+                Agregá ${fmtPrecio(threshold - subtotal)} más para envío gratis
             </p>
         ` : `
             <p class="resumen-envio-hint" style="color:var(--sage)">
@@ -140,7 +142,7 @@ async function cargarCostosEnvio() {
     try {
         const res = await fetch("/api/envio/costos");
         shippingCosts = await res.json();
-    } catch {}
+    } catch { }
 }
 
 function calcularEnvio(subtotal, method) {
@@ -149,33 +151,33 @@ function calcularEnvio(subtotal, method) {
 }
 
 function selectShipping(method) {
-    const active   = { border: "2px solid #c4875a", background: "#fdf6f0" };
-    const inactive = { border: "2px solid #ddd",    background: "#fff"    };
+    const active = { border: "2px solid #c4875a", background: "#fdf6f0" };
+    const inactive = { border: "2px solid #ddd", background: "#fff" };
 
     const domEl = document.getElementById("sm-domicilio-box");
     const sucEl = document.getElementById("sm-sucursal-box");
     const isDom = method === "domicilio";
 
-    domEl.style.border     = isDom ? active.border   : inactive.border;
+    domEl.style.border = isDom ? active.border : inactive.border;
     domEl.style.background = isDom ? active.background : inactive.background;
-    sucEl.style.border     = isDom ? inactive.border  : active.border;
+    sucEl.style.border = isDom ? inactive.border : active.border;
     sucEl.style.background = isDom ? inactive.background : active.background;
 
     document.getElementById(isDom ? "sm-domicilio" : "sm-sucursal").checked = true;
     document.getElementById("sh-fields-domicilio").style.display = isDom ? "block" : "none";
-    document.getElementById("sh-fields-sucursal").style.display  = isDom ? "none"  : "block";
+    document.getElementById("sh-fields-sucursal").style.display = isDom ? "none" : "block";
 
     actualizarResumen();
 }
 
 function actualizarResumen() {
-    const cart     = getCart();
-    const items    = Object.values(cart);
+    const cart = getCart();
+    const items = Object.values(cart);
     const subtotal = items.reduce((s, i) => s + i.precio * i.quantity, 0);
-    const method   = document.querySelector("input[name='shipping_method']:checked")?.value || "domicilio";
-    const envio    = calcularEnvio(subtotal, method);
-    const total    = subtotal + envio;
-    const fmt      = n => `$${n.toLocaleString("es-AR")}`;
+    const method = document.querySelector("input[name='shipping_method']:checked")?.value || "domicilio";
+    const envio = calcularEnvio(subtotal, method);
+    const total = subtotal + envio;
+    const fmt = n => `$${n.toLocaleString("es-AR")}`;
 
     document.getElementById("modal-resumen").innerHTML = `
         <div class="resumen-linea"><span>Subtotal</span><span>${fmt(subtotal)}</span></div>
@@ -193,16 +195,16 @@ function actualizarResumen() {
 
 // ── Método de pago ────────────────────────────────────────────────
 function selectPayment(method) {
-    const active   = { border: "2px solid #c4875a", background: "#fdf6f0" };
-    const inactive = { border: "2px solid #ddd",    background: "#fff"    };
+    const active = { border: "2px solid #c4875a", background: "#fdf6f0" };
+    const inactive = { border: "2px solid #ddd", background: "#fff" };
 
-    const mp  = document.getElementById("pm-mp-box");
-    const tr  = document.getElementById("pm-transfer-box");
+    const mp = document.getElementById("pm-mp-box");
+    const tr = document.getElementById("pm-transfer-box");
     const sel = method === "mp" ? { mp: active, tr: inactive } : { mp: inactive, tr: active };
 
-    mp.style.border     = sel.mp.border;
+    mp.style.border = sel.mp.border;
     mp.style.background = sel.mp.background;
-    tr.style.border     = sel.tr.border;
+    tr.style.border = sel.tr.border;
     tr.style.background = sel.tr.background;
 
     document.getElementById(method === "mp" ? "pm-mp" : "pm-transfer").checked = true;
@@ -210,20 +212,20 @@ function selectPayment(method) {
 
 // ── Confirmar pedido ──────────────────────────────────────────────
 async function confirmarPedido() {
-    const name            = document.getElementById("sh-name").value.trim();
-    const email           = document.getElementById("sh-email").value.trim();
-    const phone           = document.getElementById("sh-phone").value.trim();
-    const notes           = document.getElementById("sh-notes").value.trim();
-    const shippingMethod  = document.querySelector("input[name='shipping_method']:checked").value;
-    const isDomicilio     = shippingMethod === "domicilio";
+    const name = document.getElementById("sh-name").value.trim();
+    const email = document.getElementById("sh-email").value.trim();
+    const phone = document.getElementById("sh-phone").value.trim();
+    const notes = document.getElementById("sh-notes").value.trim();
+    const shippingMethod = document.querySelector("input[name='shipping_method']:checked").value;
+    const isDomicilio = shippingMethod === "domicilio";
 
-    const address  = isDomicilio ? document.getElementById("sh-address").value.trim()    : "";
-    const city     = isDomicilio ? document.getElementById("sh-city").value.trim()       : "";
+    const address = isDomicilio ? document.getElementById("sh-address").value.trim() : "";
+    const city = isDomicilio ? document.getElementById("sh-city").value.trim() : "";
     const province = isDomicilio
         ? document.getElementById("sh-province").value.trim()
         : document.getElementById("sh-province-s").value.trim();
-    const zip      = isDomicilio ? document.getElementById("sh-zip").value.trim()        : "";
-    const branch   = isDomicilio ? "" : document.getElementById("sh-branch").value.trim();
+    const zip = isDomicilio ? document.getElementById("sh-zip").value.trim() : "";
+    const branch = isDomicilio ? "" : document.getElementById("sh-branch").value.trim();
 
     if (!name || !email) {
         mostrarError("Por favor completá nombre y email.");
@@ -262,7 +264,7 @@ async function confirmarPedido() {
                 provincia: province,
                 cp: zip,
                 notas: notes,
-                payment_method:  document.querySelector("input[name='payment_method']:checked").value,
+                payment_method: document.querySelector("input[name='payment_method']:checked").value,
                 shipping_method: shippingMethod,
                 shipping_branch: branch,
                 items,
@@ -305,5 +307,5 @@ function mostrarError(msg) {
 }
 
 // ── Init ──────────────────────────────────────────────────────────
-renderCarrito();
+cargarCostosEnvio().then(() => renderCarrito());
 updateCartCount();

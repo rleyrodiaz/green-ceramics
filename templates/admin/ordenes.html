@@ -156,7 +156,7 @@
                 `${ordenes.length} ${ordenes.length === 1 ? "orden" : "ordenes"}`;
 
             tbody.innerHTML = ordenes.map(o => {
-                const fecha = new Date(o.created_at).toLocaleDateString("es-AR");
+                const fecha = new Date(o.created_at + "Z").toLocaleDateString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" });
                 const itemsText = o.items.map(i => `${i.product_name} ×${i.quantity}`).join(", ");
                 const next = nextStatus[o.status];
 
@@ -223,6 +223,7 @@
                                    ${trackingEditable ? "" : "disabled"}>
                             <button class="admin-btn-sm" style="${trackingEditable ? btnEnabled : btnDisabled}"
                                     ${trackingEditable ? `onclick="guardarTracking(${o.id})"` : "disabled"}>✓</button>
+                            <span id="tracking-ok-${o.id}" style="font-size:0.72rem;color:var(--sage);opacity:0;margin-left:0.3rem">Guardado</span>
                             <br>
                             <input type="text" id="factura-${o.id}" value="${o.factura_numero || ''}"
                                    placeholder="Nro. factura AFIP"
@@ -230,6 +231,7 @@
                                    ${facturaEditable ? "" : "disabled"}>
                             <button class="admin-btn-sm" style="${facturaEditable ? btnEnabled : btnDisabled}"
                                     ${facturaEditable ? `onclick="guardarFactura(${o.id})"` : "disabled"}>✓</button>
+                            <span id="factura-ok-${o.id}" style="font-size:0.72rem;color:var(--sage);opacity:0;margin-left:0.3rem">Guardado</span>
                         </td>
                     </tr>
                 `;
@@ -265,16 +267,25 @@
 
         async function guardarTracking(id) {
             const val = document.getElementById(`tracking-${id}`).value.trim();
-            await apiAdmin(`/api/admin/ordenes/${id}/tracking`, "PUT", { tracking_number: val });
+            const res = await apiAdmin(`/api/admin/ordenes/${id}/tracking`, "PUT", { tracking_number: val });
+            if (res !== null) mostrarConfirmacion(`tracking-ok-${id}`);
             const statusActual = document.querySelector(".filtro-status.active").dataset.status;
             cargarOrdenes(statusActual);
         }
 
         async function guardarFactura(id) {
             const val = document.getElementById(`factura-${id}`).value.trim();
-            await apiAdmin(`/api/admin/ordenes/${id}/factura`, "PUT", { factura_numero: val });
+            const res = await apiAdmin(`/api/admin/ordenes/${id}/factura`, "PUT", { factura_numero: val });
+            if (res !== null) mostrarConfirmacion(`factura-ok-${id}`);
             const statusActual = document.querySelector(".filtro-status.active").dataset.status;
             cargarOrdenes(statusActual);
+        }
+
+        function mostrarConfirmacion(elId) {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            el.style.opacity = "1";
+            setTimeout(() => { el.style.transition = "opacity 1s"; el.style.opacity = "0"; }, 1200);
         }
 
         function filtrarOrdenes(status, el) {

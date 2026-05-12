@@ -162,8 +162,9 @@ class Order(Base):
     comprobante_url : Mapped[str]           = mapped_column(String(500), nullable=True)
 
     # MercadoPago
-    mp_preference_id: Mapped[str]         = mapped_column(String(200), nullable=True)
-    mp_payment_id   : Mapped[str]         = mapped_column(String(200), nullable=True)
+    mp_preference_id    : Mapped[str]     = mapped_column(String(200), nullable=True)
+    mp_payment_id       : Mapped[str]     = mapped_column(String(200), nullable=True)
+    checkout_session_id : Mapped[str]     = mapped_column(String(36),  nullable=True)
 
     notes           : Mapped[str]         = mapped_column(Text, nullable=True)
     created_at      : Mapped[datetime]    = mapped_column(DateTime, default=datetime.utcnow)
