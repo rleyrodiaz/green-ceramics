@@ -349,13 +349,12 @@
                             onclick="document.getElementById('log-session').value='${r.session_id || ''}';cargarLog(1)">
                             ${sidShort}</td>
                         <td style="font-size:0.82rem">${r.user_name || "anónimo"}</td>
-                        <td><span class="admin-badge badge-${r.action.split('_')[0]}" style="font-size:0.75rem">
+                        <td><span class="admin-badge badge-${r.action.split('_')[0]}" style="font-size:0.75rem;white-space:nowrap">
                             ${actionLabel[r.action] || r.action}</span></td>
                         <td style="font-size:0.82rem">${r.entity_desc || "—"}</td>
                         <td style="font-size:0.78rem;color:var(--text-muted)">${geo}<br>
                             <span style="font-size:0.72rem">${device}</span></td>
-                        <td style="font-size:0.8rem;color:var(--text-muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
-                            title="${r.detail || ''}">${r.detail || "—"}</td>
+                        <td style="font-size:0.8rem;color:var(--text-muted);max-width:200px;word-break:break-word">${r.detail || "—"}</td>
                     </tr>`;
                 }).join("");
             }

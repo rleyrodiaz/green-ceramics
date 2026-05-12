@@ -51,28 +51,28 @@
     </aside> -->
 
     <main class="admin-main">
-        <div class="admin-header">
+        <div class="admin-header" style="flex-direction:column;align-items:flex-start;gap:0.75rem">
             <h1 class="admin-title">Órdenes</h1>
-            <div class="admin-filtros-status">
-                <button class="filtro-status active" data-status="" onclick="filtrarOrdenes('', this)">
+            <div class="admin-filtros-status" style="flex-wrap:wrap;gap:0.4rem">
+                <button class="filtro-status active" data-status="" onclick="filtrarOrdenes('', this)" style="font-size:0.7rem">
                     Todas
                 </button>
-                <button class="filtro-status" data-status="pending" onclick="filtrarOrdenes('pending', this)">
+                <button class="filtro-status" data-status="pending" onclick="filtrarOrdenes('pending', this)" style="font-size:0.7rem">
                     Pendientes
                 </button>
-                <button class="filtro-status" data-status="verifying" onclick="filtrarOrdenes('verifying', this)">
+                <button class="filtro-status" data-status="verifying" onclick="filtrarOrdenes('verifying', this)" style="font-size:0.7rem">
                     A verificar
                 </button>
-                <button class="filtro-status" data-status="paid" onclick="filtrarOrdenes('paid', this)">
+                <button class="filtro-status" data-status="paid" onclick="filtrarOrdenes('paid', this)" style="font-size:0.7rem">
                     Pagadas
                 </button>
-                <button class="filtro-status" data-status="preparing" onclick="filtrarOrdenes('preparing', this)">
+                <button class="filtro-status" data-status="preparing" onclick="filtrarOrdenes('preparing', this)" style="font-size:0.7rem">
                     Preparando
                 </button>
-                <button class="filtro-status" data-status="shipped" onclick="filtrarOrdenes('shipped', this)">
+                <button class="filtro-status" data-status="shipped" onclick="filtrarOrdenes('shipped', this)" style="font-size:0.7rem">
                     Enviadas
                 </button>
-                <button class="filtro-status" data-status="delivered" onclick="filtrarOrdenes('delivered', this)">
+                <button class="filtro-status" data-status="delivered" onclick="filtrarOrdenes('delivered', this)" style="font-size:0.7rem">
                     Entregadas
                 </button>
             </div>
@@ -120,6 +120,7 @@
             const tbody = document.getElementById("tbody-ordenes");
 
             if (ordenes.length === 0) {
+                document.getElementById("ordenes-count").textContent = "0 órdenes";
                 tbody.innerHTML = `<tr><td colspan="8"
                     style="text-align:center;color:var(--text-muted)">
                     No hay órdenes.</td></tr>`;
@@ -180,10 +181,10 @@
 
                 const disabledStyle   = "background:#f5f5f5;color:#bbb;cursor:not-allowed;";
                 const enabledStyle    = "background:#fff;color:inherit;cursor:text;";
-                const trackingStyle   = `font-size:0.78rem;padding:0.3rem 0.5rem;border:1px solid #ddd;border-radius:2px;width:130px;margin-bottom:0.2rem;${trackingEditable ? enabledStyle : disabledStyle}`;
-                const facturaStyle    = `font-size:0.78rem;padding:0.3rem 0.5rem;border:1px solid #ddd;border-radius:2px;width:130px;margin-bottom:0.2rem;${facturaEditable  ? enabledStyle : disabledStyle}`;
-                const btnDisabled     = `background:transparent;border:1px solid #eee;color:#ccc;font-size:0.75rem;cursor:not-allowed;`;
-                const btnEnabled      = `background:transparent;border:1px solid #ddd;color:var(--text-muted);font-size:0.75rem;`;
+                const trackingStyle   = `font-size:0.78rem;padding:0.3rem 0.5rem;border:1px solid #ddd;border-radius:2px;width:110px;margin-bottom:0.2rem;${trackingEditable ? enabledStyle : disabledStyle}`;
+                const facturaStyle    = `font-size:0.78rem;padding:0.3rem 0.5rem;border:1px solid #ddd;border-radius:2px;width:110px;margin-bottom:0.2rem;${facturaEditable  ? enabledStyle : disabledStyle}`;
+                const btnDisabled     = `background:transparent;border:1px solid #eee;color:#ccc;font-size:0.75rem;cursor:not-allowed;white-space:nowrap;`;
+                const btnEnabled      = `background:transparent;border:1px solid #ddd;color:var(--text-muted);font-size:0.75rem;white-space:nowrap;`;
 
                 return `
                     <tr>
@@ -210,9 +211,9 @@
                             </span>
                         </td>
                         <td style="font-size:0.82rem;color:var(--text-muted)">${fecha}</td>
-                        <td>
+                        <td style="min-width:160px">
                             ${next ? `
-                                <button class="admin-btn-sm" style="margin-bottom:0.4rem;display:block"
+                                <button class="admin-btn-sm" style="margin-bottom:0.4rem;display:block;white-space:nowrap"
                                         onclick="avanzarEstado(${o.id}, '${next}')">
                                     ${nextLabel[o.status]}
                                 </button>

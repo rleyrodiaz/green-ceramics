@@ -1350,9 +1350,17 @@ async def webhook_mp(request: Request):
     if resultado["status"] == "approved" and resultado["order_id"]:
         update_order_status(resultado["order_id"], "paid")
         print(f"✅ Orden {resultado['order_id']} marcada como pagada")
+        _sid_approved = None
+        try:
+            with _gdb() as db:
+                _o = db.query(_O).filter(_O.id == resultado["order_id"]).first()
+                _sid_approved = _o.checkout_session_id if _o else None
+        except Exception:
+            pass
         alog("payment_mp_approved", "order", resultado["order_id"],
              f"Orden #{resultado['order_id']}",
              detail=f"Payment ID: {resultado['payment_id']} | ${resultado['amount']:,.0f}",
+             session_id=_sid_approved,
              user_name="mercadopago")
         try:
             from db.connection import get_db as _gdb
