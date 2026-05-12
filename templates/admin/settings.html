@@ -78,8 +78,8 @@
 
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem">
             <!-- Deshabilitados -->
-            <div class="quick-card" style="opacity:0.4;cursor:not-allowed">
-                <p class="quick-card-title">Base de datos</p>
+            <div class="quick-card" style="cursor:pointer;border-color:rgba(196,60,40,0.25)" onclick="abrirModal('modal-db')">
+                <p class="quick-card-title" style="color:var(--clay)">Base de datos</p>
                 <p class="quick-card-sub">Inicializar o resetear la DB</p>
             </div>
             <div class="quick-card" style="opacity:0.4;cursor:not-allowed">
@@ -386,7 +386,102 @@
         }
 
         lucide.createIcons();
+
+        // ── Reset DB ─────────────────────────────────────────────────
+        async function ejecutarReset() {
+            const confirmVal = document.getElementById("reset-confirm").value.trim();
+            const msg = document.getElementById("reset-msg");
+
+            const groups = [];
+            if (document.getElementById("reset-ordenes").checked)  groups.push("ordenes");
+            if (document.getElementById("reset-usuarios").checked) groups.push("usuarios");
+            if (document.getElementById("reset-productos").checked) groups.push("productos");
+            if (document.getElementById("reset-actividad").checked) groups.push("actividad");
+
+            if (groups.length === 0) {
+                msg.style.color = "var(--clay)";
+                msg.textContent = "Seleccioná al menos una opción.";
+                return;
+            }
+            if (confirmVal !== "REINICIAR") {
+                msg.style.color = "var(--clay)";
+                msg.textContent = "Escribí exactamente REINICIAR para confirmar.";
+                return;
+            }
+
+            const token = localStorage.getItem("admin_token");
+            const res = await fetch("/api/admin/db/reset", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                    "X-Session-ID": window.getSessionId ? window.getSessionId() : "",
+                },
+                body: JSON.stringify({ groups, confirm: confirmVal }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok) {
+                msg.style.color = "var(--sage)";
+                msg.textContent = data.mensaje || "Reinicio completado.";
+                document.getElementById("reset-confirm").value = "";
+                document.querySelectorAll("#modal-db input[type=checkbox]")
+                    .forEach(c => c.checked = false);
+            } else {
+                msg.style.color = "var(--clay)";
+                msg.textContent = data.detail || "Error al ejecutar el reinicio.";
+            }
+        }
     </script>
+
+
+    <!-- ── Modal Base de datos ───────────────────────────────────── -->
+    <div class="settings-modal" id="modal-db" onclick="cerrarModalFondo(event,'modal-db')">
+        <div class="settings-modal-box" style="max-width:520px">
+            <button class="settings-modal-close" onclick="cerrarModal('modal-db')">×</button>
+            <p class="section-eyebrow" style="color:var(--clay)">Settings</p>
+            <h2 class="admin-title" style="margin-bottom:0.4rem">Base de datos</h2>
+            <p style="font-size:0.82rem;color:var(--clay);margin-bottom:1.75rem;padding:0.6rem 0.8rem;border:1px solid rgba(196,60,40,0.25);background:rgba(196,60,40,0.04)">
+                ⚠ Esta acción es irreversible. Los datos eliminados no se pueden recuperar.
+            </p>
+
+            <p style="font-size:0.8rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.75rem">¿Qué querés reiniciar?</p>
+
+            <div style="display:flex;flex-direction:column;gap:0.65rem;margin-bottom:1.75rem">
+                <label style="display:flex;align-items:flex-start;gap:0.6rem;font-size:0.85rem;cursor:pointer">
+                    <input type="checkbox" id="reset-ordenes" style="margin-top:0.2rem">
+                    <span><strong>Órdenes e ítems</strong><br>
+                    <span style="font-size:0.78rem;color:var(--text-muted)">Elimina todos los pedidos y sus líneas de detalle</span></span>
+                </label>
+                <label style="display:flex;align-items:flex-start;gap:0.6rem;font-size:0.85rem;cursor:pointer">
+                    <input type="checkbox" id="reset-usuarios" style="margin-top:0.2rem">
+                    <span><strong>Usuarios</strong><br>
+                    <span style="font-size:0.78rem;color:var(--text-muted)">Elimina todos los clientes (el owner no se toca). Cascadea a sus órdenes.</span></span>
+                </label>
+                <label style="display:flex;align-items:flex-start;gap:0.6rem;font-size:0.85rem;cursor:pointer">
+                    <input type="checkbox" id="reset-productos" style="margin-top:0.2rem">
+                    <span><strong>Productos e imágenes</strong><br>
+                    <span style="font-size:0.78rem;color:var(--text-muted)">Elimina todo el catálogo y las imágenes asociadas</span></span>
+                </label>
+                <label style="display:flex;align-items:flex-start;gap:0.6rem;font-size:0.85rem;cursor:pointer">
+                    <input type="checkbox" id="reset-actividad" style="margin-top:0.2rem">
+                    <span><strong>Activity Log</strong><br>
+                    <span style="font-size:0.78rem;color:var(--text-muted)">Borra el historial completo de actividad</span></span>
+                </label>
+            </div>
+
+            <p style="font-size:0.82rem;margin-bottom:0.4rem">Escribí <strong>REINICIAR</strong> para confirmar:</p>
+            <input type="text" id="reset-confirm" placeholder="REINICIAR" autocomplete="off"
+                   style="border:1px solid #ddd;padding:0.5rem 0.75rem;width:100%;font-size:0.85rem;box-sizing:border-box;margin-bottom:1rem">
+
+            <button onclick="ejecutarReset()"
+                    style="background:var(--clay);color:#fff;border:none;padding:0.75rem 1.5rem;
+                           font-family:'Jost',sans-serif;font-size:0.78rem;letter-spacing:0.15em;
+                           text-transform:uppercase;cursor:pointer;width:100%">
+                Ejecutar reinicio
+            </button>
+            <p id="reset-msg" style="font-size:0.82rem;margin-top:0.75rem;min-height:1.2em"></p>
+        </div>
+    </div>
 
 </body>
 

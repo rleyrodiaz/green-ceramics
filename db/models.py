@@ -116,7 +116,7 @@ class ProductImage(Base):
     __tablename__ = "product_images"
 
     id          : Mapped[int]  = mapped_column(Integer, primary_key=True)
-    product_id  : Mapped[int]  = mapped_column(ForeignKey("products.id"), nullable=False)
+    product_id  : Mapped[int]  = mapped_column(ForeignKey("products.id", ondelete="CASCADE"), nullable=False)
     url         : Mapped[str]  = mapped_column(String(500), nullable=False)   # URL de Cloudinary
     public_id   : Mapped[str]  = mapped_column(String(200), nullable=True)    # ID en Cloudinary (para borrar)
     alt_text    : Mapped[str]  = mapped_column(String(200), nullable=True)
@@ -130,7 +130,7 @@ class Order(Base):
     __tablename__ = "orders"
 
     id              : Mapped[int]         = mapped_column(Integer, primary_key=True)
-    user_id         : Mapped[int]         = mapped_column(ForeignKey("users.id"), nullable=False)
+    user_id         : Mapped[int]         = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     status          : Mapped[OrderStatus] = mapped_column(PgEnum(OrderStatus), default=OrderStatus.pending)
 
     # Totales
@@ -226,8 +226,8 @@ class OrderItem(Base):
     __tablename__ = "order_items"
 
     id          : Mapped[int]     = mapped_column(Integer, primary_key=True)
-    order_id    : Mapped[int]     = mapped_column(ForeignKey("orders.id"), nullable=False)
-    product_id  : Mapped[int]     = mapped_column(ForeignKey("products.id"), nullable=False)
+    order_id    : Mapped[int]     = mapped_column(ForeignKey("orders.id",   ondelete="CASCADE"),  nullable=False)
+    product_id  : Mapped[int]     = mapped_column(ForeignKey("products.id", ondelete="RESTRICT"), nullable=False)
 
     # Snapshot del precio al momento de compra (el precio puede cambiar después)
     quantity    : Mapped[int]     = mapped_column(Integer, nullable=False)

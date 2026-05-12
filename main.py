@@ -188,6 +188,38 @@ async def lifespan(app: FastAPI):
             conn.commit()
             print("✅ activity_logs.referrer ampliado a TEXT")
 
+    # Agregar ON DELETE CASCADE a FK constraints si todavía no lo tienen
+    _fk_updates = [
+        # (child_table, column, parent_table, constraint_name, on_delete)
+        ("orders",         "user_id",    "users",    "orders_user_id_fkey",          "CASCADE"),
+        ("order_items",    "order_id",   "orders",   "order_items_order_id_fkey",    "CASCADE"),
+        ("order_items",    "product_id", "products", "order_items_product_id_fkey",  "RESTRICT"),
+        ("product_images", "product_id", "products", "product_images_product_id_fkey","CASCADE"),
+    ]
+    _deltype_map = {"CASCADE": "c", "RESTRICT": "r", "SET NULL": "n"}
+    with engine.connect() as conn:
+        for child, col, parent, cname, on_del in _fk_updates:
+            target = _deltype_map[on_del]
+            conn.execute(text(f"""
+                DO $$
+                DECLARE v_name text;
+                BEGIN
+                    SELECT conname INTO v_name
+                    FROM pg_constraint
+                    WHERE conrelid  = '{child}'::regclass
+                      AND confrelid = '{parent}'::regclass
+                      AND contype   = 'f'
+                      AND confdeltype != '{target}';
+                    IF v_name IS NOT NULL THEN
+                        EXECUTE 'ALTER TABLE {child} DROP CONSTRAINT ' || quote_ident(v_name);
+                        ALTER TABLE {child} ADD CONSTRAINT {cname}
+                            FOREIGN KEY ({col}) REFERENCES {parent}(id) ON DELETE {on_del};
+                    END IF;
+                END $$;
+            """))
+            conn.commit()
+    print("✅ FK constraints OK")
+
     # Seed app_settings con valores de EVs (solo si la clave no existe)
     from services.settings_db import seed_defaults
     from config.settings import (
@@ -1325,6 +1357,69 @@ async def session_start(request: Request):
             print(f"⚠️ Error email visita: {e}")
 
     return {"ok": True}
+
+
+# ── Reset DB ──────────────────────────────────────────────────────
+
+@app.post("/api/admin/db/reset")
+async def api_db_reset(body: dict, owner=Depends(verificar_owner)):
+    from db.connection import get_db as _gdb
+    from sqlalchemy import text as _text
+
+    if body.get("confirm") != "REINICIAR":
+        raise HTTPException(status_code=400, detail="Escribí exactamente REINICIAR para confirmar.")
+
+    groups = set(body.get("groups", []))
+    if not groups:
+        raise HTTPException(status_code=400, detail="Seleccioná al menos una opción.")
+
+    resultado = {}
+    with _gdb() as db:
+        if "actividad" in groups:
+            resultado["actividad"] = db.execute(_text("DELETE FROM activity_logs")).rowcount
+
+        # Orden FK-safe: primero order_items, luego orders, luego users/products
+        if "ordenes" in groups:
+            db.execute(_text("DELETE FROM order_items"))
+            resultado["ordenes"] = db.execute(_text("DELETE FROM orders")).rowcount
+
+        if "usuarios" in groups:
+            if "ordenes" not in groups:
+                # CASCADE maneja order_items → orders de los usuarios borrados
+                db.execute(_text(
+                    "DELETE FROM order_items WHERE order_id IN "
+                    "(SELECT id FROM orders WHERE user_id IN "
+                    "(SELECT id FROM users WHERE role != 'owner'))"
+                ))
+                db.execute(_text("DELETE FROM orders WHERE user_id IN "
+                                 "(SELECT id FROM users WHERE role != 'owner')"))
+            resultado["usuarios"] = db.execute(
+                _text("DELETE FROM users WHERE role != 'owner'")
+            ).rowcount
+
+        if "productos" in groups:
+            en_uso = db.execute(_text(
+                "SELECT COUNT(*) FROM order_items oi "
+                "JOIN orders o ON o.id = oi.order_id "
+                "WHERE o.status NOT IN ('cancelled')"
+            )).scalar()
+            if en_uso:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"No se pueden borrar los productos: {en_uso} ítem(s) están en órdenes activas. "
+                           f"Primero reiniciá las órdenes o cancelalas."
+                )
+            db.execute(_text("DELETE FROM product_images"))
+            resultado["productos"] = db.execute(_text("DELETE FROM products")).rowcount
+
+    partes = []
+    labels = {"actividad": "registros de actividad", "ordenes": "órdenes",
+              "usuarios": "usuarios", "productos": "productos"}
+    for g in ["actividad", "ordenes", "usuarios", "productos"]:
+        if g in resultado:
+            partes.append(f"{resultado[g]} {labels[g]}")
+
+    return {"ok": True, "mensaje": f"Eliminados: {', '.join(partes) or 'nada'}."}
 
 
 # ── Webhook MercadoPago ────────────────────────────────────────────
