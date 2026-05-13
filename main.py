@@ -1237,6 +1237,10 @@ async def subir_comprobante(orden_id: int, request: Request):
         orden = db.query(Order).filter(Order.id == orden_id).first()
         if not orden:
             raise HTTPException(status_code=404, detail="Orden no encontrada.")
+        if orden.payment_method != PaymentMethod.transfer:
+            raise HTTPException(status_code=400, detail="Esta orden no es de transferencia.")
+        if orden.status not in (OrderStatus.pending, OrderStatus.verifying):
+            raise HTTPException(status_code=400, detail=f"No se puede subir comprobante en estado '{orden.status.value}'.")
         orden.comprobante_url = result["url"]
         orden.status = OrderStatus.verifying
 

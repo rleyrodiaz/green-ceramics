@@ -154,6 +154,7 @@ def confirm_payment(mp_payment_id: str, mp_preference_id: str) -> Order | None:
 
 STATUS_LABELS = {
     "pending"  : "⏳ Pendiente",
+    "verifying": "🔍 A verificar",
     "paid"     : "✅ Pagado",
     "preparing": "🔨 Preparando",
     "shipped"  : "🚚 Enviado",
@@ -161,7 +162,7 @@ STATUS_LABELS = {
     "cancelled": "❌ Cancelado",
 }
 
-STATUS_FLOW = ["pending", "paid", "preparing", "shipped", "delivered"]
+STATUS_FLOW = ["pending", "verifying", "paid", "preparing", "shipped", "delivered"]
 
 
 def next_status(current: str) -> str | None:
