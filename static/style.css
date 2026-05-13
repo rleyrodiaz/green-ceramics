@@ -958,6 +958,7 @@ footer .logo {
 }
 
 /* ── CARRITO ── */
+
 .carrito-layout {
     display: grid;
     grid-template-columns: 1fr 360px;
