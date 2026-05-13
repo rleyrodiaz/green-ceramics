@@ -176,7 +176,10 @@ async function borrarProducto(id, nombre) {
     try {
         const res = await fetch(`/api/admin/productos/${id}`, {
             method: "DELETE",
-            headers: { "Authorization": `Bearer ${token}` },
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "X-Session-ID": window.getSessionId ? window.getSessionId() : "",
+            },
         });
 
         if (!res.ok) {
@@ -235,7 +238,10 @@ async function guardarEdicion() {
         }
         await fetch(`/api/admin/productos/${id}/imagenes`, {
             method: "POST",
-            headers: { "Authorization": `Bearer ${token}` },
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "X-Session-ID": window.getSessionId ? window.getSessionId() : "",
+            },
             body: formData,
         });
     }

@@ -141,6 +141,8 @@ function mostrarPanel(user) {
     document.getElementById("panel-nombre").textContent = user.nombre;
     document.getElementById("datos-name").value = user.nombre;
     document.getElementById("datos-email").value = user.email;
+    updateCartCount();
+    updateNavAccount();
     cargarPedidos(user.id);
     updateNavAdmin();
 }

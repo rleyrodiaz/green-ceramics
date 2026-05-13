@@ -816,6 +816,7 @@ async def api_actualizar_usuario(
 @app.delete("/api/admin/usuarios/{user_id}")
 async def api_borrar_usuario(
     user_id: int,
+    request: Request,
     admin=Depends(verificar_admin)
 ):
     from db.connection import get_db
@@ -830,7 +831,12 @@ async def api_borrar_usuario(
                 status_code=400,
                 detail=f"No se puede borrar '{user.name}' porque tiene pedidos asociados."
             )
+        nombre_usuario = user.name
         db.delete(user)
+
+    from services.activity import log as alog
+    alog("user_deleted", "user", user_id, nombre_usuario,
+         user_id=int(admin.get("sub", 0)), request=request)
     return {"ok": True}
 
 # ── API admin ──────────────────────────────────────────────────────
@@ -1008,6 +1014,9 @@ async def api_crear_producto(
         is_featured=destacado,
         image_files=image_files,
     )
+    from services.activity import log as alog
+    alog("product_created", "product", product.id, product.name,
+         user_id=int(admin.get("sub", 0)), request=request)
     return {"ok": True, "id": product.id, "slug": product.slug}
 
 @app.post("/api/admin/productos/{product_id}/imagenes")
@@ -1381,15 +1390,17 @@ async def api_db_reset(body: dict, owner=Depends(verificar_owner)):
     with _gdb() as db:
         if "actividad" in groups:
             resultado["actividad"] = db.execute(_text("DELETE FROM activity_logs")).rowcount
+            db.execute(_text("ALTER SEQUENCE activity_logs_id_seq RESTART WITH 1"))
 
         # Orden FK-safe: primero order_items, luego orders, luego users/products
         if "ordenes" in groups:
             db.execute(_text("DELETE FROM order_items"))
             resultado["ordenes"] = db.execute(_text("DELETE FROM orders")).rowcount
+            db.execute(_text("ALTER SEQUENCE order_items_id_seq RESTART WITH 1"))
+            db.execute(_text("ALTER SEQUENCE orders_id_seq RESTART WITH 1"))
 
         if "usuarios" in groups:
             if "ordenes" not in groups:
-                # CASCADE maneja order_items → orders de los usuarios borrados
                 db.execute(_text(
                     "DELETE FROM order_items WHERE order_id IN "
                     "(SELECT id FROM orders WHERE user_id IN "
@@ -1397,9 +1408,12 @@ async def api_db_reset(body: dict, owner=Depends(verificar_owner)):
                 ))
                 db.execute(_text("DELETE FROM orders WHERE user_id IN "
                                  "(SELECT id FROM users WHERE role != 'owner')"))
+                db.execute(_text("ALTER SEQUENCE order_items_id_seq RESTART WITH 1"))
+                db.execute(_text("ALTER SEQUENCE orders_id_seq RESTART WITH 1"))
             resultado["usuarios"] = db.execute(
                 _text("DELETE FROM users WHERE role != 'owner'")
             ).rowcount
+            db.execute(_text("ALTER SEQUENCE users_id_seq RESTART WITH 1"))
 
         if "productos" in groups:
             en_uso = db.execute(_text(
@@ -1415,6 +1429,8 @@ async def api_db_reset(body: dict, owner=Depends(verificar_owner)):
                 )
             db.execute(_text("DELETE FROM product_images"))
             resultado["productos"] = db.execute(_text("DELETE FROM products")).rowcount
+            db.execute(_text("ALTER SEQUENCE product_images_id_seq RESTART WITH 1"))
+            db.execute(_text("ALTER SEQUENCE products_id_seq RESTART WITH 1"))
 
     partes = []
     labels = {"actividad": "registros de actividad", "ordenes": "órdenes",

@@ -25,26 +25,33 @@
     <nav>
         <a href="/" class="logo">Green<span>.</span></a>
 
-        <button class="nav-toggle" onclick="toggleMenu()" aria-label="Menú">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-            </svg>
-        </button>
+        <div class="nav-right">
+            <button class="nav-toggle" onclick="toggleMenu()" aria-label="Menú">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <line x1="3" y1="12" x2="21" y2="12" />
+                    <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+            </button>
 
         <ul class="nav-menu" id="nav-menu" style="font-size:0.72rem">
             <button class="nav-close" onclick="toggleMenu()">×</button>
-            <li><a href="/catalogo">Colección</a></li>
-            <li><a href="/#nosotros" onclick="scrollToSection('nosotros')">Nosotros</a></li>
+            <li><a href="/catalogo">Tienda</a></li>
             <li><a href="/#contacto" onclick="scrollToSection('contacto')">Contacto</a></li>
-            <li><a href="/carrito">Carrito (<span id="cart-count">0</span>)</a></li>
-            <li><a href="/cuenta">Cuenta</a></li>
             <li>
                 <a href="/admin/dashboard" id="nav-admin-link" style="display:none;color:var(--clay)">Admin ↗</a>
             </li>
         </ul>
+
+            <button class="account-icon-btn" id="account-icon-btn" onclick="toggleAccountMenu()" aria-label="Mi cuenta">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </button>
+            <button class="cart-icon-btn" onclick="toggleCartDrawer()" aria-label="Carrito">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                <span class="cart-badge" id="cart-count">0</span>
+            </button>
+        </div>
     </nav>
 
     <div style="min-height:80vh; display:flex; align-items:center;

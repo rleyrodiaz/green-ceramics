@@ -5,11 +5,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Usuarios — Admin Green.</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
     <link
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
         rel="stylesheet" />
     <link rel="stylesheet" href="/static/style.css" />
     <link rel="stylesheet" href="/static/admin.css" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 
 <body class="admin-body">
@@ -103,19 +105,20 @@
                             </span>
                         </td>
                         <td style="font-size:0.82rem;color:var(--text-muted)">${fecha}</td>
-                        <td>
-                            <button class="admin-btn-sm"
+                        <td style="display:flex;gap:0.4rem;align-items:center">
+                            <button class="admin-btn-icon" title="${u.activo ? 'Desactivar' : 'Activar'}"
                                     onclick="toggleActivoUsuario(${u.id}, ${u.activo})">
-                                ${u.activo ? "Desactivar" : "Activar"}
+                                <i data-lucide="${u.activo ? 'toggle-right' : 'toggle-left'}"></i>
                             </button>
-                            <button class="admin-btn-sm"
+                            <button class="admin-btn-icon" title="Borrar"
                                     onclick="borrarUsuario(${u.id}, '${u.nombre}')">
-                                Borrar
+                                <i data-lucide="trash-2"></i>
                             </button>
                         </td>
                     </tr>
                 `;
             }).join("");
+            lucide.createIcons();
         }
 
         async function cambiarRol(id, rol) {
@@ -132,7 +135,10 @@
             const token = localStorage.getItem("admin_token");
             const res = await fetch(`/api/admin/usuarios/${id}`, {
                 method: "DELETE",
-                headers: { "Authorization": `Bearer ${token}` },
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "X-Session-ID": window.getSessionId ? window.getSessionId() : "",
+                },
             });
             if (!res.ok) {
                 const err = await res.json();

@@ -374,7 +374,10 @@
             const token = localStorage.getItem("admin_token");
             const res = await fetch("/api/admin/productos", {
                 method: "POST",
-                headers: { "Authorization": `Bearer ${token}` },
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "X-Session-ID": window.getSessionId ? window.getSessionId() : "",
+                },
                 body: formData,
             });
 
