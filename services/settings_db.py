@@ -1,4 +1,4 @@
-from db.connection import get_db
+﻿from db.connection import get_db
 from db.models import AppSetting
 
 # Valores por defecto si la clave no existe en la DB
@@ -85,4 +85,4 @@ def seed_defaults(initial_values: dict[str, str]) -> None:
                 if not existing:
                     db.add(AppSetting(key=key, value=value, label=LABELS.get(key, key)))
     except Exception as e:
-        print(f"⚠️ Error seeding settings: {e}")
+        print(f"[WARN] Error seeding settings: {e}")

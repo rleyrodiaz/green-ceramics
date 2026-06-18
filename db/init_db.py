@@ -1,4 +1,4 @@
-# script para crear todas las tablas desde Python
+﻿# script para crear todas las tablas desde Python
 
 """
 Correr una sola vez para crear el schema:
@@ -12,7 +12,7 @@ def init():
     test_connection()
     print("🔨 Creando tablas...")
     Base.metadata.create_all(bind=engine)
-    print("✅ Schema creado correctamente")
+    print("[OK] Schema creado correctamente")
     print("\nTablas creadas:")
     for table in Base.metadata.sorted_tables:
         print(f"  - {table.name}")

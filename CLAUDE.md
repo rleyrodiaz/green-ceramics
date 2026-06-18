@@ -31,9 +31,30 @@ Single-file FastAPI backend (`main.py`) serving Jinja2 HTML templates with vanil
 
 **Frontend:**
 - Each page has a corresponding JS file (`carrito.js`, `cuenta.js`, `catalogo.js`, etc.)
-- `main.js` is loaded on every public page — defines `getCart()`, `getSessionId()`, `updateCartCount()`, `updateNavAdmin()`
+- `main.js` is loaded on every public page — defines `getCart()`, `getSessionId()`, `updateCartCount()`, `updateNavAdmin()`, `updateNavAccount()`, `toggleCartDrawer()`, `abrirCheckout()`, `confirmarPedido()`, and all checkout functions
 - `admin.js` is loaded on every admin page — defines `apiAdmin()` (adds Bearer token + X-Session-ID headers), `getSessionId()` (duplicated here since main.js isn't loaded on admin pages)
 - Auth state stored in `localStorage` as `session` (customers) and `admin_token` / `admin_user` (admins)
+
+**Cart + Checkout flow (all in main.js):**
+- Cart stored in `localStorage`. Badge only shows count when user is logged in.
+- Cart drawer injected into every page via `insertAdjacentHTML` in DOMContentLoaded. Persists open state across navigation via `sessionStorage("cart_open")`.
+- Checkout modal also injected by main.js — available on every page. Clicking "Proceder al pago" opens it directly on the current page without navigating to `/carrito`.
+- `shippingCosts` and `cargarCostosEnvio()` defined in main.js and shared with carrito.js.
+- `carrito.js` only handles the `/carrito` page rendering (item list, quantity controls). All checkout logic lives in main.js.
+
+**Nav structure (all public templates):**
+```html
+<nav>
+  <a class="logo">...</a>
+  <div class="nav-right">
+    <button class="nav-toggle">...</button>       <!-- hamburger, hidden on desktop -->
+    <ul class="nav-menu">...</ul>                  <!-- links -->
+    <button class="account-icon-btn">...</button>  <!-- person icon -->
+    <button class="cart-icon-btn">...</button>     <!-- cart icon with badge -->
+  </div>
+</nav>
+```
+Account icon: logged-out → goes to `/cuenta`; logged-in → dropdown (Mi cuenta / Salir). Cart icon: logged-out → goes to `/cuenta`; logged-in → opens drawer.
 
 ## Database migrations
 
@@ -53,6 +74,8 @@ The lifespan also runs a FK constraint block that upgrades existing constraints 
 
 **Session ID** — generated in the browser as a UUID stored in `sessionStorage`. Public pages read it via `main.js:getSessionId()`; admin pages via `admin.js:getSessionId()`. Sent as `X-Session-ID` header on every fetch. For MP payment redirects (browser navigations, not fetch), the session_id is embedded in the back_url as `?sid=` and read from query params in the GET handler. For webhook events (no user session), `checkout_session_id` is stored on the `Order` at creation time and retrieved by the webhook handler.
 
+**Direct fetch calls** — any `fetch()` call that bypasses `apiAdmin()` (e.g., FormData uploads, DELETE without body) must manually include `"X-Session-ID": window.getSessionId ? window.getSessionId() : ""` in headers, otherwise activity log entries won't have a session_id.
+
 **Admin auth** — `verificar_admin` dependency checks Bearer JWT token (role: admin or owner). `verificar_owner` is stricter (owner only — used for Settings, Activity Log, DB reset). Token payload: `{"sub": user_id_str, "rol": role}`.
 
 **Payment flow:**
@@ -61,7 +84,7 @@ The lifespan also runs a FK constraint block that upgrades existing constraints 
 
 **Order status flow:** `pending` → `verifying`* → `paid` → `preparing` → `shipped` → `delivered` (*transfer only)
 
-**Shipping cost** — read at runtime from `app_settings` via `services/settings_db.py`. Keys: `shipping.domicilio`, `shipping.sucursal`, `shipping.free_threshold`. Never hardcode these values.
+**Shipping cost** — read at runtime from `app_settings` via `services/settings_db.py`. Keys: `shipping.domicilio`, `shipping.sucursal`, `shipping.free_threshold`. Never hardcode these values. The global `shippingCosts` object in main.js is loaded via `cargarCostosEnvio()` and shared across the drawer and checkout modal.
 
 **Business configuration (app_settings)** — key-value table edited from admin Settings UI. `services/settings_db.py` provides `get_setting()`, `get_int()`, `get_float()`, `get_bool()`, `set_setting()`. Seeded from env vars on first startup. Use this for any owner-configurable value (shipping costs, bank details, reminder hours, notification toggles).
 
@@ -70,6 +93,8 @@ The lifespan also runs a FK constraint block that upgrades existing constraints 
 - `order_items.order_id → orders` CASCADE
 - `order_items.product_id → products` RESTRICT (cannot delete a product used in any order)
 - `product_images.product_id → products` CASCADE
+
+**DB reset endpoint** — `POST /api/admin/db/reset` (owner only). Accepts `{ groups: [...], confirm: "REINICIAR" }`. Groups: `ordenes`, `usuarios`, `productos`, `actividad`. Resets sequences to 1 after deletion. Available from admin Settings UI.
 
 **Storage backend** — controlled by `STORAGE_BACKEND` env var (`"cloudinary"` or `"local"`). Local saves to `static/comprobantes/`. Cloudinary uses `resource_type="image"` and `format="jpg"` to convert PDFs to images on upload.
 

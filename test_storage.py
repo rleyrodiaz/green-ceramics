@@ -1,4 +1,4 @@
-"""
+﻿"""
 Testea upload y delete en ambos backends.
 Correr con: poetry run python test_storage.py
 """
@@ -31,14 +31,14 @@ image_bytes = buf.getvalue()
 
 # Upload
 result = upload_image(image_bytes, "test-producto", position=0)
-print(f"✅ Upload local OK")
+print(f"[OK] Upload local OK")
 print(f"   url       : {result['url']}")
 print(f"   public_id : {result['public_id']}")
 
 # Verificar que el archivo existe
 filepath = Path(result["url"])
-assert filepath.exists(), "❌ El archivo no se creó en disco"
-print(f"   archivo   : existe en disco ✅")
+assert filepath.exists(), "[ERROR] El archivo no se creó en disco"
+print(f"   archivo   : existe en disco [OK]")
 
 # get_image_url
 resolved = get_image_url(result["url"])
@@ -46,8 +46,8 @@ print(f"   get_image_url: {resolved}")
 
 # Delete
 delete_image(result["public_id"])
-assert not filepath.exists(), "❌ El archivo no se eliminó"
-print(f"✅ Delete local OK\n")
+assert not filepath.exists(), "[ERROR] El archivo no se eliminó"
+print(f"[OK] Delete local OK\n")
 
 
 # ── Test CLOUDINARY ────────────────────────────────────────────────
@@ -64,7 +64,7 @@ api_key    = os.getenv("CLOUDINARY_API_KEY")
 api_secret = os.getenv("CLOUDINARY_API_SECRET")
 
 if not all([cloud_name, api_key, api_secret]):
-    print("⚠️  Credenciales de Cloudinary no configuradas en .env — saltando test")
+    print("[WARN]  Credenciales de Cloudinary no configuradas en .env — saltando test")
 else:
     os.environ["STORAGE_BACKEND"] = "cloudinary"
     importlib.reload(settings_module)
@@ -75,13 +75,13 @@ else:
     from services.storage import upload_image as upload_cl, delete_image as delete_cl
 
     result_cl = upload_cl(image_bytes, "test-producto-cl", position=0)
-    print(f"✅ Upload Cloudinary OK")
+    print(f"[OK] Upload Cloudinary OK")
     print(f"   url       : {result_cl['url']}")
     print(f"   public_id : {result_cl['public_id']}")
 
     delete_cl(result_cl["public_id"])
-    print(f"✅ Delete Cloudinary OK\n")
+    print(f"[OK] Delete Cloudinary OK\n")
 
 print("=" * 50)
-print("TODOS LOS TESTS PASARON ✅")
+print("TODOS LOS TESTS PASARON [OK]")
 print("=" * 50)

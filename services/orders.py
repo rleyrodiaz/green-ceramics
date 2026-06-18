@@ -1,4 +1,4 @@
-from decimal import Decimal
+﻿from decimal import Decimal
 from sqlalchemy.orm import make_transient
 from db.models import Order, OrderItem, OrderStatus, Product
 from db.connection import get_db
@@ -155,11 +155,11 @@ def confirm_payment(mp_payment_id: str, mp_preference_id: str) -> Order | None:
 STATUS_LABELS = {
     "pending"  : "⏳ Pendiente",
     "verifying": "🔍 A verificar",
-    "paid"     : "✅ Pagado",
+    "paid"     : "[OK] Pagado",
     "preparing": "🔨 Preparando",
     "shipped"  : "🚚 Enviado",
-    "delivered": "📦 Entregado",
-    "cancelled": "❌ Cancelado",
+    "delivered": "[PKG] Entregado",
+    "cancelled": "[ERROR] Cancelado",
 }
 
 STATUS_FLOW = ["pending", "verifying", "paid", "preparing", "shipped", "delivered"]

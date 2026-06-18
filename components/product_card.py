@@ -1,4 +1,4 @@
-import streamlit as st
+﻿import streamlit as st
 from db.models import Product
 from services.products import get_primary_image_url
 from services.storage import get_image_url
@@ -49,4 +49,4 @@ def render_product_card(product: Product) -> None:
             disabled=disabled,
         ):
             cart_service.add_to_cart(product)
-            st.toast(f"✅ {product.name} agregado al carrito")
+            st.toast(f"[OK] {product.name} agregado al carrito")

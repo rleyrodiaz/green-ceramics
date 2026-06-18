@@ -477,6 +477,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     background:#f5f0e8;z-index:301;transform:translateX(100%);
                     transition:transform 0.3s ease;display:flex;flex-direction:column;
                     box-shadow:-4px 0 32px rgba(44,31,20,0.14)">
+            <div id="cart-resize-handle"
+                 style="position:absolute;left:0;top:0;bottom:0;width:6px;cursor:ew-resize;z-index:10"></div>
             <div style="display:flex;justify-content:space-between;align-items:center;
                         padding:1.5rem 1.75rem;border-bottom:1px solid rgba(196,135,90,0.15);flex-shrink:0">
                 <span style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;
@@ -490,6 +492,32 @@ document.addEventListener("DOMContentLoaded", () => {
                  border-top:1px solid rgba(196,135,90,0.15);flex-shrink:0"></div>
         </div>
     `);
+
+    // Resize handle del drawer
+    (function () {
+        const drawer = document.getElementById("cart-drawer");
+        const handle = document.getElementById("cart-resize-handle");
+        const MIN = 280, MAX_VW = 0.92;
+        const saved = parseInt(localStorage.getItem("cart_drawer_width") || "0");
+        if (saved >= MIN) drawer.style.width = saved + "px";
+        handle.addEventListener("mousedown", e => {
+            e.preventDefault();
+            const startX = e.clientX, startW = drawer.offsetWidth;
+            drawer.style.transition = "none";
+            const onMove = ev => {
+                const max = Math.floor(window.innerWidth * MAX_VW);
+                drawer.style.width = Math.min(max, Math.max(MIN, startW + startX - ev.clientX)) + "px";
+            };
+            const onUp = () => {
+                drawer.style.transition = "transform 0.3s ease";
+                localStorage.setItem("cart_drawer_width", drawer.offsetWidth);
+                document.removeEventListener("mousemove", onMove);
+                document.removeEventListener("mouseup", onUp);
+            };
+            document.addEventListener("mousemove", onMove);
+            document.addEventListener("mouseup", onUp);
+        });
+    })();
 
     // Inyectar modal checkout
     document.body.insertAdjacentHTML("beforeend", `

@@ -1,4 +1,4 @@
-import streamlit as st
+﻿import streamlit as st
 from components.layout import page_setup
 from components.session import is_admin
 from services.products import get_product_by_slug, get_primary_image_url
@@ -105,6 +105,6 @@ with col_info:
         )
         if st.button("Agregar al carrito", use_container_width=True, type="primary"):
             cart_service.add_to_cart(product, quantity=int(quantity))
-            st.toast(f"✅ {product.name} agregado al carrito")
+            st.toast(f"[OK] {product.name} agregado al carrito")
     else:
         st.button("Sin stock", disabled=True, use_container_width=True)

@@ -114,6 +114,37 @@ nav a:hover {
 
 .cart-icon-btn:hover { color: var(--clay); }
 
+.fullscreen-btn-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.fullscreen-icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--earth);
+    padding: 0;
+    line-height: 0;
+    flex-shrink: 0;
+}
+.fullscreen-icon-btn:hover { color: var(--clay); }
+.fullscreen-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 0;
+    background: var(--earth);
+    color: #fff;
+    font-size: 0.68rem;
+    white-space: nowrap;
+    padding: 4px 8px;
+    border-radius: 4px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+.fullscreen-btn-wrapper:hover .fullscreen-tooltip { opacity: 1; }
+
 .cart-badge {
     position: absolute;
     top: -6px;

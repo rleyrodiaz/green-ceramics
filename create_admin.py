@@ -1,4 +1,4 @@
-from services.auth import register
+﻿from services.auth import register
 from services.products import get_all_categories
 
 # Crear admin
@@ -8,12 +8,12 @@ try:
         email="admin@ceramics.com",
         password="admin1234"
     )
-    print(f"✅ Usuario creado: {user.name}")
+    print(f"[OK] Usuario creado: {user.name}")
 except ValueError as e:
-    print(f"⚠️ {e}")  # ya existe, no pasa nada
+    print(f"[WARN] {e}")  # ya existe, no pasa nada
 
 # Probar categorías
 cats = get_all_categories()
-print(f"\n✅ Categorías ({len(cats)}):")
+print(f"\n[OK] Categorías ({len(cats)}):")
 for c in cats:
     print(f"  - {c.name}")

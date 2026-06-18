@@ -1,4 +1,4 @@
-import requests as http_requests
+﻿import requests as http_requests
 from db.connection import get_db
 from db.models import ActivityLog
 
@@ -99,5 +99,5 @@ def log(
             ))
     except Exception as e:
         import traceback
-        print(f"⚠️ Error activity log [{action}]: {e}")
+        print(f"[WARN] Error activity log [{action}]: {e}")
         traceback.print_exc()

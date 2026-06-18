@@ -1,4 +1,4 @@
-import resend
+﻿import resend
 from config.settings import RESEND_API_KEY, EMAIL_FROM
 
 resend.api_key = RESEND_API_KEY
@@ -74,7 +74,7 @@ def _send(to: str, subject: str, html: str) -> bool:
         resend.Emails.send({"from": EMAIL_FROM, "to": to, "subject": subject, "html": html})
         return True
     except Exception as e:
-        print(f"⚠️ Error email '{subject}' → {to}: {e}")
+        print(f"[WARN] Error email '{subject}' → {to}: {e}")
         return False
 
 
@@ -525,12 +525,12 @@ def enviar_comprobante_al_owner(
                     "content":  list(resp.content),
                 }]
         except Exception as e:
-            print(f"⚠️ No se pudo adjuntar comprobante: {e}")
+            print(f"[WARN] No se pudo adjuntar comprobante: {e}")
 
         resend.Emails.send(params)
         return True
     except Exception as e:
-        print(f"⚠️ Error email comprobante owner: {e}")
+        print(f"[WARN] Error email comprobante owner: {e}")
         return False
 
 
@@ -607,5 +607,5 @@ def enviar_email_contacto(nombre: str, email: str, mensaje: str) -> bool:
         })
         return True
     except Exception as e:
-        print(f"⚠️ Error email contacto: {e}")
+        print(f"[WARN] Error email contacto: {e}")
         return False

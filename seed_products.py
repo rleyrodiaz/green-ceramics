@@ -1,4 +1,4 @@
-"""poetry run python seed_products.py"""
+﻿"""poetry run python seed_products.py"""
 from db.connection import get_db
 from db.models import Category, Product
 from decimal import Decimal
@@ -15,7 +15,7 @@ with get_db() as db:
         ]
         db.add_all(cats)
         db.flush()
-        print(f"✅ {len(cats)} categorías creadas")
+        print(f"[OK] {len(cats)} categorías creadas")
 
     cat_map = {c.slug: c.id for c in db.query(Category).all()}
 
@@ -48,6 +48,6 @@ with get_db() as db:
                 description="Mug con marcas de pellizco visibles, sin stock."),
     ]
     db.add_all(productos)
-    print(f"✅ {len(productos)} productos creados")
+    print(f"[OK] {len(productos)} productos creados")
 
-print("\n✅ Seed completado. Corré: poetry run streamlit run app.py")
+print("\n[OK] Seed completado. Corré: poetry run streamlit run app.py")

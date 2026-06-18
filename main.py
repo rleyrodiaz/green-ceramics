@@ -1,4 +1,4 @@
-# El orden completo del archivo queda así:
+﻿# El orden completo del archivo queda así:
 # imports y setup
 # app = FastAPI(...)
 # mount static
@@ -111,7 +111,7 @@ async def lifespan(app: FastAPI):
                 Category(name="Piezas únicas",  slug="piezas-unicas", position=6),
             ]
             db.add_all(cats)
-            print("✅ Categorías creadas")
+            print("[OK] Categorías creadas")
 
         if db.query(User).count() == 0:
             from services.auth import hash_password
@@ -123,7 +123,7 @@ async def lifespan(app: FastAPI):
                 role=UserRole.admin,
             )
             db.add(admin)
-            print("✅ Admin creado")
+            print("[OK] Admin creado")
 
     # Auto-migración: columnas nuevas en orders
     from sqlalchemy import text, inspect as sa_inspect
@@ -132,11 +132,11 @@ async def lifespan(app: FastAPI):
         if "payment_method" not in cols:
             conn.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method VARCHAR DEFAULT 'mp'"))
             conn.commit()
-            print("✅ Columna payment_method agregada")
+            print("[OK] Columna payment_method agregada")
         if "comprobante_url" not in cols:
             conn.execute(text("ALTER TABLE orders ADD COLUMN IF NOT EXISTS comprobante_url VARCHAR(500)"))
             conn.commit()
-            print("✅ Columna comprobante_url agregada")
+            print("[OK] Columna comprobante_url agregada")
         conn.execute(text("ALTER TYPE orderstatus ADD VALUE IF NOT EXISTS 'verifying' AFTER 'pending'"))
         conn.commit()
         for col, coltype in {
@@ -154,7 +154,7 @@ async def lifespan(app: FastAPI):
             if col not in cols:
                 conn.execute(text(f"ALTER TABLE orders ADD COLUMN IF NOT EXISTS {col} {coltype}"))
                 conn.commit()
-                print(f"✅ Columna orders.{col} agregada")
+                print(f"[OK] Columna orders.{col} agregada")
         conn.execute(text("ALTER TYPE shippingmethod ADD VALUE IF NOT EXISTS 'domicilio'"))
         conn.commit()
         conn.execute(text("ALTER TYPE shippingmethod ADD VALUE IF NOT EXISTS 'sucursal'"))
@@ -180,13 +180,13 @@ async def lifespan(app: FastAPI):
             if col not in log_cols:
                 conn.execute(text(f"ALTER TABLE activity_logs ADD COLUMN IF NOT EXISTS {col} {coltype}"))
                 conn.commit()
-                print(f"✅ Columna activity_logs.{col} agregada")
+                print(f"[OK] Columna activity_logs.{col} agregada")
         # Fix: upgrade referrer from VARCHAR(300) to TEXT if needed
         ref_col = next((c for c in sa_inspect(engine).get_columns("activity_logs") if c["name"] == "referrer"), None)
         if ref_col and "varchar" in str(ref_col.get("type", "")).lower():
             conn.execute(text("ALTER TABLE activity_logs ALTER COLUMN referrer TYPE TEXT"))
             conn.commit()
-            print("✅ activity_logs.referrer ampliado a TEXT")
+            print("[OK] activity_logs.referrer ampliado a TEXT")
 
     # Agregar ON DELETE CASCADE a FK constraints si todavía no lo tienen
     _fk_updates = [
@@ -218,7 +218,7 @@ async def lifespan(app: FastAPI):
                 END $$;
             """))
             conn.commit()
-    print("✅ FK constraints OK")
+    print("[OK] FK constraints OK")
 
     # Seed app_settings con valores de EVs (solo si la clave no existe)
     from services.settings_db import seed_defaults
@@ -240,14 +240,14 @@ async def lifespan(app: FastAPI):
         "notifications.visit_email":    "false",
         "notifications.visit_email_to": os.getenv("EMAIL_OWNER", "rleyrodiaz@hotmail.com"),
     })
-    print("✅ App settings OK")
+    print("[OK] App settings OK")
 
     test_connection()
-    print("✅ DB lista")
+    print("[OK] DB lista")
 
     scheduler.add_job(enviar_recordatorios, "interval", hours=1, id="recordatorios", replace_existing=True)
     scheduler.start()
-    print("✅ Scheduler iniciado")
+    print("[OK] Scheduler iniciado")
 
     yield
 
@@ -493,7 +493,7 @@ async def crear_orden(data: OrdenRequest, request: Request):
                 orden.checkout_session_id = _sid or None
                 mp_url = preferencia["init_point"]
             except Exception as e:
-                print(f"⚠️ Error MP: {e}")
+                print(f"[WARN] Error MP: {e}")
                 raise HTTPException(status_code=500, detail="Error al procesar el pago. Intentá de nuevo.")
 
         # Enviar email de confirmación
@@ -518,9 +518,9 @@ async def crear_orden(data: OrdenRequest, request: Request):
                 ciudad    = data.ciudad,
                 provincia = data.provincia,
             )
-            print(f"✅ Email enviado a {data.email}")
+            print(f"[OK] Email enviado a {data.email}")
         except Exception as e:
-            print(f"⚠️ Error email: {e}")
+            print(f"[WARN] Error email: {e}")
 
         _orden_id = orden.id
         _result   = {
@@ -948,7 +948,7 @@ async def api_update_orden_status(
                 elif body["status"] == "delivered":
                     enviar_pedido_entregado(o.customer_email, o.shipping_name or "", o.id)
     except Exception as e:
-        print(f"⚠️ Error email status change: {e}")
+        print(f"[WARN] Error email status change: {e}")
 
     return {"ok": True, "status": orden.status.value}
 
@@ -1270,7 +1270,7 @@ async def subir_comprobante(orden_id: int, request: Request):
                         owner_email, o.id, o.shipping_name or "", float(o.total), result["url"]
                     )
     except Exception as e:
-        print(f"⚠️ Error email comprobante: {e}")
+        print(f"[WARN] Error email comprobante: {e}")
     return {"ok": True, "url": result["url"]}
 
 
@@ -1314,7 +1314,7 @@ async def pago_fallido(request: Request):
                 if o and o.customer_email:
                     enviar_pago_fallido(o.customer_email, o.shipping_name or "", o.id, float(o.total))
         except Exception as e:
-            print(f"⚠️ Error email pago fallido: {e}")
+            print(f"[WARN] Error email pago fallido: {e}")
 
     return templates.TemplateResponse("pago_fallido.html", {"request": request, "is_production": IS_PRODUCTION})
 
@@ -1367,7 +1367,7 @@ async def session_start(request: Request):
                     session_id = session_id or "",
                 )
         except Exception as e:
-            print(f"⚠️ Error email visita: {e}")
+            print(f"[WARN] Error email visita: {e}")
 
     return {"ok": True}
 
@@ -1464,7 +1464,7 @@ async def webhook_mp(request: Request):
     from services.activity import log as alog
     if resultado["status"] == "approved" and resultado["order_id"]:
         update_order_status(resultado["order_id"], "paid")
-        print(f"✅ Orden {resultado['order_id']} marcada como pagada")
+        print(f"[OK] Orden {resultado['order_id']} marcada como pagada")
         _sid_approved = None
         try:
             with _gdb() as db:
@@ -1492,7 +1492,7 @@ async def webhook_mp(request: Request):
                         o.shipping_address or "", o.shipping_branch or "",
                     )
         except Exception as e:
-            print(f"⚠️ Error email pago confirmado: {e}")
+            print(f"[WARN] Error email pago confirmado: {e}")
     elif resultado["status"] in ("rejected", "cancelled") and resultado["order_id"]:
         _sid_rejected = None
         try:
@@ -1525,5 +1525,5 @@ async def api_contacto(data: ContactoRequest):
         )
         return {"ok": True}
     except Exception as e:
-        print(f"⚠️ Error email contacto: {e}")
+        print(f"[WARN] Error email contacto: {e}")
         raise HTTPException(status_code=500, detail="Error enviando email.")

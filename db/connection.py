@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, text
+﻿from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from contextlib import contextmanager
 from config.settings import DATABASE_URL
@@ -35,4 +35,4 @@ def test_connection():
     """Útil para verificar que la DB está levantada."""
     with engine.connect() as conn:
         conn.execute(text("SELECT 1"))
-    print("✅ Conexión a PostgreSQL OK")
+    print("[OK] Conexión a PostgreSQL OK")
